@@ -33,9 +33,16 @@ def tces():
         }
         </style>
         <form>
-            TIC: <input name="tic" type="number"></input>
+            TIC: <input name="tic" type="number" placeholder="TIC id, e.g., 261136679"></input>
             <input type="Submit"></input>
         </form>
+        <footer style="margin-top: 5vh; font-size: 85%;">
+            Based on data published by <a href="https://archive.stsci.edu/" target="_blank">MAST</a>:
+            <ul>
+                <li><a href="https://archive.stsci.edu/tess/bulk_downloads/bulk_downloads_tce.html" target="_blank">TCE statistics bulk downloads</a> (<code>csv</code> files)</li>
+                <li><a href="https://archive.stsci.edu/tess/bulk_downloads/bulk_downloads_ffi-tp-lc-dv.html#:~:text=Data-,Validation,-%2D%20Single%20Sector" target="_blank">TESS DV files bulk downloads</a> (<code>sh</code> files)</li>
+            </ul>
+        </footer>
     </body>
 </html>
 """
