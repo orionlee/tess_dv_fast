@@ -1,0 +1,6 @@
+# core requirement
+pandas>=2.0
+# needed for downloading source data from MAST
+requests>=2.0
+# needed for webapp
+Flask>=3.0
