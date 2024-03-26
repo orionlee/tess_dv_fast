@@ -2,9 +2,13 @@
 
 - Contains additional files needed for Google Cloud Run deployment
 
+- Run the following to create a directory at `../build` with the necessary files to deploy to Google Cloud Run.
 
-## Misc Notes
+```shell
+assemble.sh ../build
+```
 
-- requires entrypoint to be `main.py` with `app` attribute (of the flask app)
-- triggered warning that memory usage exceed the default of 512Mb, increased
-  the memory limit to 1Gb.  (Unclear on the root cause of the high memory usage.)
+
+## Miscellaneous Notes
+
+- Google Cloud Run requires entry point to be `main.py` with `app` attribute (of the flask app).
