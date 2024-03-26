@@ -1,0 +1,18 @@
+# Backup files
+*~
+
+# python cache
+__pycache__/
+
+# juypter internals
+.ipynb_checkpoints/
+
+# poetry lock
+poetry.lock
+
+
+# data files downloaded and the db built
+data/
+
+# for gcloud, etc.
+build/
