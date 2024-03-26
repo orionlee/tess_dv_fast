@@ -17,10 +17,14 @@ cp --update --archive  $base/../data/tess_dv_fast/tess_tcestats.db  $dest/data/t
 cp --update --archive  $base/*.*  $dest
 cp --update --archive  $base/../tess_dv_fast.py $base/../tess_dv_fast_webapp.py  $dest
 
+echo SQLite database included in the deployment:
 ls -l $dest/data/tess_dv_fast/tess_tcestats.db
 
-echo Source assembled. You can do the following for actual deployment:
+echo
+echo Sources assembled. You can do the following for actual deployment:
+echo
 echo cd $dest
-# for local verification
+echo "# sanity test locally"
 echo python main.py
+echo "# actual deployment with Google Cloud SDK"
 echo gcloud run deploy --source .
