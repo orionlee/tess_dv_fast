@@ -410,12 +410,12 @@ _MIN_DB_COLS = [
     # for deriving "OotOffset",
     "tce_dicco_msky",
     "tce_dicco_msky_err",
-    "dvs",
-    "dvm",
-    "dvr",
+    "dvs",  # will be replaced by generated version to save space
+    # "dvm",  # will be generated
+    # "dvr",  # will be generated
     "tce_sectors",  # for deriving "tce_num_sectors"
-    # the following is not needed strictly speaking, but
-    # they are components of a TCE's identifier, so it might be handy.
+    # the following are components of a TCE's identifier, required
+    # to generate dvs, dvm, dvr columns
     "tce_plnt_num",
     "sectors",
 ]
@@ -430,6 +430,17 @@ def _export_tcestats_as_db(minimal_db=False):
         usecols=usecols,
     )
 
+    if minimal_db:
+        # replace dvs / dvm  / dvr columns with a much more compact representation
+        match = df["dvs"].str.extract("tess(?P<date_time>\d+)-.+-(?P<pin>\d+)_dvs")
+        # date_time: the associated timestamp
+        # pin: the pipeline run
+        # filename format reference: https://archive.stsci.edu/missions-and-data/tess/data-products
+        df["_dv_date_time"] = match.date_time
+        df["_dv_pin"] = match.pin.astype(int)
+        # dvs, dvm, dvr can be dynamically derived from above columns and the existing TCE identifier columns
+        df.drop(columns=["dvs"], inplace=True)
+
     Path(db_path_tmp).unlink(missing_ok=True)
     con = sqlite3.connect(db_path_tmp)
     try:  # use try / finally instead of with ... because sqlite3 context manager does not close the connection
@@ -440,6 +451,28 @@ def _export_tcestats_as_db(minimal_db=False):
         cursor = con.cursor()
         cursor.execute(sql_index)
         cursor.close()
+
+        if minimal_db:  # create dvs, dvm, dvm as generated columns to save space
+            # generated column is available from SQLite version 3.31.0 (2020-01-22).
+            # So modern Python3 would all work.
+            # https://www.sqlite.org/gencol.html
+            # OPEN: Check sqlite version to guard against old version with `sqlite3.sqlite_version_info`
+            cursor = con.cursor()
+            cursor.executescript("""\
+ALTER TABLE tess_tcestats
+ADD COLUMN dvs GENERATED ALWAYS AS
+('tess' || _dv_date_time || '-' || sectors || '-' || substr('0000000000000000'|| ticid, -16, 16)  || '-' ||  substr('00' || tce_plnt_num, -2, 2) || '-' ||  substr('00000' || _dv_pin, -5, 5) || '_dvs.pdf');
+
+ALTER TABLE tess_tcestats
+ADD COLUMN dvm GENERATED ALWAYS AS
+('tess' || _dv_date_time || '-' || sectors || '-' || substr('0000000000000000'|| ticid, -16, 16)  || '-' ||  substr('00000' || _dv_pin, -5, 5) || '_dvm.pdf');
+
+ALTER TABLE tess_tcestats
+ADD COLUMN dvr GENERATED ALWAYS AS
+('tess' || _dv_date_time || '-' || sectors || '-' || substr('0000000000000000'|| ticid, -16, 16)  || '-' ||  substr('00000' || _dv_pin, -5, 5) || '_dvr.pdf');
+            """)
+            cursor.close()
+
         con.commit()
     finally:
         con.close()
@@ -638,6 +671,13 @@ if __name__ == "__main__":
         default=False,
         help="make the sqlite db minimal for typical use cases / webapp usage",
     )
+    parser.add_argument(
+        "--db_only",
+        dest="db_only",
+        action="store_true",
+        default=False,
+        help="only convert the local master csv to sqlite db, without rebuilding the csv from sources",
+    )
 
     args = parser.parse_args()
     if not args.update:
@@ -645,5 +685,10 @@ if __name__ == "__main__":
         parser.print_help()
         parser.exit()
 
-    print(f"Downloading data to create master csv, minimal_db={args.minimal_db}")
-    download_all_data(minimal_db=args.minimal_db)
+    if not args.db_only:
+        print(f"Downloading data to create master csv, minimal_db={args.minimal_db}")
+        download_all_data(minimal_db=args.minimal_db)
+    else:
+        print(f"Convert master csv to db, minimal_db={args.minimal_db}")
+        _export_tcestats_as_db(args.minimal_db)
+
