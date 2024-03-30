@@ -50,9 +50,15 @@ def tces():
     # do actual search by tic
     df = tess_dv_fast.get_tce_infos_of_tic(tic)
     res_content = tess_dv_fast.display_tce_infos(df, return_as="html", no_tce_html="No TCE")
-    res_content = res_content.replace("<table", '<table class="sortable"')
+    # make table searchable / sortable by https://github.com/javve/list.js
+    res_content = res_content.replace("<tbody", '<tbody class="list"')
+    for i in [0, 4, 5, 6, 7, 8, 9, 10, 11]:
+        res_content = res_content.replace(
+            f'class="col_heading level0 col{i}"',
+            f'class="col_heading level0 col{i} sort" data-sort="col{i}"'
+            )
 
-    res_css = """\
+    res_css = r"""
 <style type="text/css">
 body {
     margin-left: 16px;
@@ -77,16 +83,30 @@ thead th {
     top: 0; /* for stickiness */
     background-color: darkgray;
     color: white;
-    text-transform: initial !important;  /* override sortable style */
 }
 
 th, td {
-    padding: 0.25rem;
-    padding-bottom: 0.5rem;
+    padding: 5px 10px;
 }
 
 tbody tr:nth-child(even) {
     background-color: #f5f5f5
+}
+
+
+th.sort {
+    cursor: pointer;
+}
+.sort.asc, .sort.desc {
+  color: yellow;
+}
+.sort.asc::after {
+  content: "\025B4";
+  padding-left: 3px;
+}
+.sort.desc::after {
+  content: "\025BE";
+  padding-left: 3px
 }
 </style>
 """
@@ -100,9 +120,11 @@ tbody tr:nth-child(even) {
         <title>({len(df)}) TCEs for TIC {tic}</title>
     </head>
     <body>
-        <h1>TCEs for TIC <a href="https://exofop.ipac.caltech.edu/tess/target.php?id={tic}" target="_exofop">{tic}</a></h1>
         <div id="result">
-        {res_content}
+            <h1>TCEs for TIC <a href="https://exofop.ipac.caltech.edu/tess/target.php?id={tic}" target="_exofop">{tic}</a>
+            <input class="search" placeholder="Search table" style="margin-left: 40ch;" accesskey="/">
+            </h1>
+            {res_content}
         </div>
 
         <hr>
@@ -110,8 +132,11 @@ tbody tr:nth-child(even) {
             <a href="/tces">New Search</a>
         </footer>
 
-        <link href="https://cdn.jsdelivr.net/gh/tofsjonas/sortable@latest/sortable.min.css" rel="stylesheet" />
-        <script src="https://cdn.jsdelivr.net/gh/tofsjonas/sortable@latest/sortable.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/gh/javve/list.js@latest/dist/list.min.js"></script>
+        <script>
+            const options = {{valueNames: ['col0', 'col4', 'col5', 'col6', 'col7', 'col8', 'col9', 'col10', 'col11']}};
+            const tceList = new List('result', options);
+        </script>
         {res_css}
     </body>
 </html>
