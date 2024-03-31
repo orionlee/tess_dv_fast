@@ -134,8 +134,11 @@ th.sort {
 
         <script src="https://cdn.jsdelivr.net/gh/javve/list.js@latest/dist/list.min.js"></script>
         <script>
-            const options = {{valueNames: ['col0', 'col4', 'col5', 'col6', 'col7', 'col8', 'col9', 'col10', 'col11']}};
-            const tceList = new List('result', options);
+            if (document.querySelector('#result table')) {{
+                // init search/sort only if there is a result table
+                const options = {{valueNames: ['col0', 'col4', 'col5', 'col6', 'col7', 'col8', 'col9', 'col10', 'col11']}};
+                const tceList = new List('result', options);
+            }}
         </script>
         {res_css}
     </body>
