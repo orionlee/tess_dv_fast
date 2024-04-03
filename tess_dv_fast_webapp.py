@@ -132,7 +132,7 @@ th.sort {
             <a href="/tces">New Search</a>
         </footer>
 
-        <script src="https://cdn.jsdelivr.net/gh/javve/list.js@latest/dist/list.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/gh/javve/list.js@2.3.1/dist/list.min.js"></script>
         <script>
             if (document.querySelector('#result table')) {{
                 // init search/sort only if there is a result table
