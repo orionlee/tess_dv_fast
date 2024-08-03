@@ -16,8 +16,9 @@ def index():
 def tces():
     tic = request.args.get("tic", None)
 
+    # case return search form
     if tic is None:
-        return """\
+        most_of_html = """\
 <!DOCTYPE html>
 <html>
     <head>
@@ -42,12 +43,20 @@ def tces():
                 <li><a href="https://archive.stsci.edu/tess/bulk_downloads/bulk_downloads_tce.html" target="_blank">TCE statistics bulk downloads</a> (<code>csv</code> files)</li>
                 <li><a href="https://archive.stsci.edu/tess/bulk_downloads/bulk_downloads_ffi-tp-lc-dv.html#:~:text=Data-,Validation,-%2D%20Single%20Sector" target="_blank">TESS DV files bulk downloads</a> (<code>sh</code> files)</li>
             </ul>
+"""
+        high_watermarks = tess_dv_fast.get_high_watermarks()
+        return most_of_html + f"""
+            Latest:
+            <ul>
+                <li>Single sector: {high_watermarks["single_sector"]}</li>
+                <li>Multi sector: {high_watermarks["multi_sector"]}</li>
+            </ul>
         </footer>
     </body>
 </html>
 """
 
-    # do actual search by tic
+    # case do actual search by tic
     df = tess_dv_fast.get_tce_infos_of_tic(tic)
     res_content = tess_dv_fast.display_tce_infos(df, return_as="html", no_tce_html="No TCE")
     # make table searchable / sortable by https://github.com/javve/list.js
