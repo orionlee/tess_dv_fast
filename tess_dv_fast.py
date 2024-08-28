@@ -115,6 +115,7 @@ sources_tcestats_single_sector = [
     "https://archive.stsci.edu/missions/tess/catalogs/tce/tess2024085233023-s0077-s0077_dvr-tcestats.csv",
     "https://archive.stsci.edu/missions/tess/catalogs/tce/tess2024124181742-s0078-s0078_dvr-tcestats.csv",
     "https://archive.stsci.edu/missions/tess/catalogs/tce/tess2024143004541-s0079-s0079_dvr-tcestats.csv",
+    "https://archive.stsci.edu/missions/tess/catalogs/tce/tess2024170090940-s0080-s0080_dvr-tcestats.csv",
 ]
 
 # Similar javascript codes to scrape the url, except the initial CSS selector is: "table#TABLE_5 a"
@@ -229,6 +230,7 @@ sources_dv_sh_single_sector = [
     "https://archive.stsci.edu/missions/tess/download_scripts/sector/tesscurl_sector_77_dv.sh",
     "https://archive.stsci.edu/missions/tess/download_scripts/sector/tesscurl_sector_78_dv.sh",
     "https://archive.stsci.edu/missions/tess/download_scripts/sector/tesscurl_sector_79_dv.sh",
+    "https://archive.stsci.edu/missions/tess/download_scripts/sector/tesscurl_sector_80_dv.sh",
 ]
 
 # urls = urls.filter(u => u.match(/_multisector_.+_dv.sh$/))
@@ -500,6 +502,7 @@ def get_high_watermarks():
         latest_multi_sector = latest_multi_sector_match[1]
 
     return dict(single_sector=latest_single_sector, multi_sector=latest_multi_sector)
+
 
 def read_tcestats_csv(**kwargs):
     # for ~230k rows of TCE stats data, it took 4-10secs, taking up 200+Mb memory.
