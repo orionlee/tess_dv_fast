@@ -630,6 +630,9 @@ def display_tce_infos(df, return_as=None, no_tce_html=None):
     def format_offset_n_sigma(val_sigma_str):
         # format TicOffset / OotOffset, to value (sigma)
         try:
+            if val_sigma_str == "0.0|-0.0":
+                # special case TCE has no offset, indicated by offset == 0 and error == -1 in the source csv
+                return "N/A"
             val, sigma = val_sigma_str.split("|")
             val = float(val)
             sigma = float(sigma)
@@ -637,7 +640,7 @@ def display_tce_infos(df, return_as=None, no_tce_html=None):
                 sigma_style = ' style="color: red; font-weight: bold;"'
             else:
                 sigma_style = ""
-            return f"{val:.0f} <span{sigma_style}>({sigma:.1f})<span>"
+            return f"{val:.0f} <span{sigma_style}>({sigma:.1f})</span>"
         except Exception:
             # in case something unexpected, fallback to raw str to avoid exception in display
             return val_sigma_str
