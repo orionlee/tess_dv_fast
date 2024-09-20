@@ -51,6 +51,8 @@ def tces():
                 <li>Single sector: {high_watermarks["single_sector"]}</li>
                 <li>Multi sector: {high_watermarks["multi_sector"]}</li>
             </ul>
+            <br>
+            <a href="https://github.com/orionlee/tess_dv_fast/" target="_blank">Sources /Issues</a>
         </footer>
     </body>
 </html>
