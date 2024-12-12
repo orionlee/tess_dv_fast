@@ -6,6 +6,10 @@
 base=`dirname $0`
 dest=$1
 
+if [ "$dest" == "" ]; then
+    dest=$base/../build
+fi
+
 set -e
 
 mkdir -p $dest
