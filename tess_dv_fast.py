@@ -120,6 +120,7 @@ sources_tcestats_single_sector = [
     "https://archive.stsci.edu/missions/tess/catalogs/tce/tess2024223211538-s0082-s0082_dvr-tcestats.csv",
     "https://archive.stsci.edu/missions/tess/catalogs/tce/tess2024249220537-s0083-s0083_dvr-tcestats.csv",
     "https://archive.stsci.edu/missions/tess/catalogs/tce/tess2024275015936-s0084-s0084_dvr-tcestats.csv",
+    "https://archive.stsci.edu/missions/tess/catalogs/tce/tess2024301010935-s0085-s0085_dvr-tcestats.csv",
 ]
 
 # Similar javascript codes to scrape the url, except the initial CSS selector is: "table#TABLE_5 a"
@@ -239,6 +240,7 @@ sources_dv_sh_single_sector = [
     "https://archive.stsci.edu/missions/tess/download_scripts/sector/tesscurl_sector_82_dv.sh",
     "https://archive.stsci.edu/missions/tess/download_scripts/sector/tesscurl_sector_83_dv.sh",
     "https://archive.stsci.edu/missions/tess/download_scripts/sector/tesscurl_sector_84_dv.sh",
+    "https://archive.stsci.edu/missions/tess/download_scripts/sector/tesscurl_sector_85_dv.sh",
 ]
 
 # urls = urls.filter(u => u.match(/_multisector_.+_dv.sh$/))
