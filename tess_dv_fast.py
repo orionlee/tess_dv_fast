@@ -121,6 +121,9 @@ sources_tcestats_single_sector = [
     "https://archive.stsci.edu/missions/tess/catalogs/tce/tess2024249220537-s0083-s0083_dvr-tcestats.csv",
     "https://archive.stsci.edu/missions/tess/catalogs/tce/tess2024275015936-s0084-s0084_dvr-tcestats.csv",
     "https://archive.stsci.edu/missions/tess/catalogs/tce/tess2024301010935-s0085-s0085_dvr-tcestats.csv",
+    "https://archive.stsci.edu/missions/tess/catalogs/tce/tess2024326180534-s0086-s0086_dvr-tcestats.csv",
+    "https://archive.stsci.edu/missions/tess/catalogs/tce/tess2024353124933-s0087-s0087_dvr-tcestats.csv",
+    "https://archive.stsci.edu/missions/tess/catalogs/tce/tess2025014152932-s0088-s0088_dvr-tcestats.csv",
 ]
 
 # Similar javascript codes to scrape the url, except the initial CSS selector is: "table#TABLE_5 a"
@@ -146,6 +149,7 @@ sources_tcestats_multi_sector = [
     "https://archive.stsci.edu/missions/tess/catalogs/tce/tess2018206190142-s0001-s0065_dvr-tcestats.csv",
     "https://archive.stsci.edu/missions/tess/catalogs/tce/tess2018206190142-s0001-s0069_dvr-tcestats.csv",
     "https://archive.stsci.edu/missions/tess/catalogs/tce/tess2018235142541-s0002-s0072_dvr-tcestats.csv",
+    "https://archive.stsci.edu/missions/tess/catalogs/tce/tess2019199201929-s0014-s0078_dvr-tcestats.csv",
 ]
 
 # dv products bulk download source: https://archive.stsci.edu/tess/bulk_downloads/bulk_downloads_ffi-tp-lc-dv.html
@@ -241,6 +245,9 @@ sources_dv_sh_single_sector = [
     "https://archive.stsci.edu/missions/tess/download_scripts/sector/tesscurl_sector_83_dv.sh",
     "https://archive.stsci.edu/missions/tess/download_scripts/sector/tesscurl_sector_84_dv.sh",
     "https://archive.stsci.edu/missions/tess/download_scripts/sector/tesscurl_sector_85_dv.sh",
+    "https://archive.stsci.edu/missions/tess/download_scripts/sector/tesscurl_sector_86_dv.sh",
+    "https://archive.stsci.edu/missions/tess/download_scripts/sector/tesscurl_sector_87_dv.sh",
+    "https://archive.stsci.edu/missions/tess/download_scripts/sector/tesscurl_sector_88_dv.sh",
 ]
 
 # urls = urls.filter(u => u.match(/_multisector_.+_dv.sh$/))
@@ -266,6 +273,7 @@ sources_dv_sh_multi_sector = [
     "https://archive.stsci.edu/missions/tess/download_scripts/sector/tesscurl_multisector_s0001-s0065_dv.sh",
     "https://archive.stsci.edu/missions/tess/download_scripts/sector/tesscurl_multisector_s0001-s0069_dv.sh",
     "https://archive.stsci.edu/missions/tess/download_scripts/sector/tesscurl_multisector_s0002-s0072_dv.sh",
+    "https://archive.stsci.edu/missions/tess/download_scripts/sector/tesscurl_multisector_s0014-s0078_dv.sh",
 ]
 
 
