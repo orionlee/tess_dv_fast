@@ -606,7 +606,7 @@ def get_tce_infos_of_tic(tic, tce_filter_func=None):
     _add_helpful_columns_to_tcestats(df)
     # sort the result to the standard form
     # so that it is predictable for tce_filter_func
-    df = df.sort_values(by=["ticid", "tce_num_sectors", "exomast_id"], ascending=[True, False, True])
+    df = df.sort_values(by=["ticid", "sectors_span", "exomast_id"], ascending=[True, False, True])
     if tce_filter_func is not None and len(df) > 0:
         df = tce_filter_func(df)
 
@@ -617,8 +617,32 @@ R_EARTH_TO_R_JUPITER = 6378.1 / 71492
 
 
 def _add_helpful_columns_to_tcestats(df):
+    def get_sectors_span(sectors_str):
+        match = re.match(r"s(\d+)-s(\d+)", sectors_str)
+        if match is None:
+            return -1  # should not happen
+        start, end = int(match[1]), int(match[2])
+
+        return end - start + 1
+
     # convert the bit pattern in tce_sectors column to number of sectors a TCE covers
     df["tce_num_sectors"] = df["tce_sectors"].str.count("1")
+    # OPEN: column "sectors_span" is added as a workaround to
+    # ensure the default sort (TCEs with most sectors come first) work properly
+    #
+    # Root cause: it appears that in MAST-supplied csv,
+    # the value of the column "tce_sectors" is inaccurate for long multi-sector ones
+    # such that the values beyond sector 79 is missing.
+    # Example: TIC 336824844, for s0014-s0086 shows up after s0014-s0078 using tce_num_sectors
+    # as the "tce_sectors" value for s0014-s0086 is inaccurate.
+    # As a result,the value derived column "tce_num_sectors" for the
+    # recent long multi-sector TCEs (starting from s0014-s0086).
+    #
+    # Workaround solution:
+    # add a new column "sectors_span" that count the span of a (multi-sector) TCE,
+    # e.g., for s0014-0086, it is 86 - 14 + 1 = 73
+    #
+    df["sectors_span"] = [get_sectors_span(s) for s in df["sectors"]]
     df["tce_prad_jup"] = df["tce_prad"] * R_EARTH_TO_R_JUPITER
     df["tce_depth_pct"] = df["tce_depth"] / 10000
     df["tce_ditco_msky_sig"] = df["tce_ditco_msky"] / df["tce_ditco_msky_err"]  # TicOffset sig
