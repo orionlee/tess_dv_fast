@@ -500,7 +500,7 @@ def _export_tcestats_as_db(minimal_db=False):
 
     if minimal_db:
         # replace dvs / dvm  / dvr columns with a much more compact representation
-        match = df["dvs"].str.extract("tess(?P<date_time>\d+)-.+-(?P<pin>\d+)_dvs")
+        match = df["dvs"].str.extract(r"tess(?P<date_time>\d+)-.+-(?P<pin>\d+)_dvs")
         # date_time: the associated timestamp
         # pin: the pipeline run
         # filename format reference: https://archive.stsci.edu/missions-and-data/tess/data-products
