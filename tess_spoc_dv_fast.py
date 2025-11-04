@@ -296,7 +296,7 @@ def get_tce_infos_of_tic(tic, tce_filter_func=None):
     _add_helpful_columns_to_tcestats(df)
     # sort the result to the standard form
     # so that it is predictable for tce_filter_func
-    df = df.sort_values(by=["ticid", "sectors_span", "tce_plnt_num"], ascending=[True, False, True])
+    df = df.sort_values(by=["ticid", "sectors_span", "id"], ascending=[True, False, True])
     if tce_filter_func is not None and len(df) > 0:
         df = tce_filter_func(df)
 
