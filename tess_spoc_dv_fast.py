@@ -186,6 +186,22 @@ def _export_tcestats_as_db():
 #
 # Query Logic
 #
+
+def get_high_watermarks():
+
+    latest_single_sector_url = sources_dv_sh_single_sector[-1]
+    latest_single_sector_match = re.search(r"(s\d+)", latest_single_sector_url)
+    if latest_single_sector_match is not None:
+        latest_single_sector = latest_single_sector_match[1]
+
+    latest_multi_sector_url = sources_dv_sh_multi_sector[-1]
+    latest_multi_sector_match = re.search(r"(s\d+-s\d+)", latest_multi_sector_url)
+    if latest_multi_sector_match is not None:
+        latest_multi_sector = latest_multi_sector_match[1]
+
+    return dict(single_sector=latest_single_sector, multi_sector=latest_multi_sector)
+
+
 def _read_tcestats_csv(**kwargs):
     # the master csv is barebone, and meant to be used internally for converting to sqlite db
     csv_path = f"{DATA_BASE_DIR}/{TCESTATS_FILENAME}"

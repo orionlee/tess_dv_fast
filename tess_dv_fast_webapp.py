@@ -38,20 +38,28 @@ def tces():
             TIC: <input name="tic" type="number" placeholder="TIC id, e.g., 261136679"></input>
             <input type="Submit"></input>
         </form>
+"""
+        spoc_high_watermarks = tess_dv_fast.get_high_watermarks()
+        tess_spoc_high_watermarks = tess_spoc_dv_fast.get_high_watermarks()
+        return most_of_html + f"""
         <footer style="margin-top: 5vh; font-size: 85%;">
-            Based on data published by <a href="https://archive.stsci.edu/" target="_blank">MAST</a>:
+            <p>SPOC (2 min cadence): based on data published by <a href="https://archive.stsci.edu/" target="_blank">MAST</a>:</p>
             <ul>
                 <li><a href="https://archive.stsci.edu/tess/bulk_downloads/bulk_downloads_tce.html" target="_blank">TCE statistics bulk downloads</a> (<code>csv</code> files)</li>
                 <li><a href="https://archive.stsci.edu/tess/bulk_downloads/bulk_downloads_ffi-tp-lc-dv.html#:~:text=Data-,Validation,-%2D%20Single%20Sector" target="_blank">TESS DV files bulk downloads</a> (<code>sh</code> files)</li>
             </ul>
-"""
-        high_watermarks = tess_dv_fast.get_high_watermarks()
-        return most_of_html + f"""
             Latest:
             <ul>
-                <li>Single sector: {high_watermarks["single_sector"]}</li>
-                <li>Multi sector: {high_watermarks["multi_sector"]}</li>
+                <li>Single sector: {spoc_high_watermarks["single_sector"]}</li>
+                <li>Multi sector: {spoc_high_watermarks["multi_sector"]}</li>
             </ul>
+            <p>TESS-SPOC (FFI): based on data published by <a href="https://archive.stsci.edu/hlsp/tess-spoc" target="_blank">HLSP</a> at MAST:</p>
+            Latest:
+            <ul>
+                <li>Single sector: {tess_spoc_high_watermarks["single_sector"]}</li>
+                <li>Multi sector: {tess_spoc_high_watermarks["multi_sector"]}</li>
+            </ul>
+
             <br>
             <a href="https://github.com/orionlee/tess_dv_fast/" target="_blank">Sources /Issues</a>
         </footer>
