@@ -1,3 +1,5 @@
+import re
+
 from flask import Flask
 from flask import request, redirect, url_for
 
@@ -70,6 +72,8 @@ def tces():
     # case do actual search by tic
     df = tess_dv_fast.get_tce_infos_of_tic(tic)
     spoc_content = tess_dv_fast.display_tce_infos(df, return_as="html", no_tce_html="No SPOC TCE")
+    # custom id for the table for javascript functions
+    spoc_content = re.sub('<table id="[^"]+"', '<table id="table_spoc"', spoc_content)
     # make table searchable / sortable by https://github.com/javve/list.js
     spoc_content = spoc_content.replace("<tbody", '<tbody class="list"')
     for i in [0, 4, 5, 6, 7, 8, 9, 10, 11]:
@@ -118,6 +122,8 @@ tbody tr:nth-child(even) {
 }
 
 
+/* for sort table */
+
 th.sort {
     cursor: pointer;
 }
@@ -132,6 +138,34 @@ th.sort {
   content: "\025BE";
   padding-left: 3px
 }
+
+/* for hide show TESS-SPOC "duplicates" of SPOC */
+
+#tessSpocDupCtr {
+    margin-bottom: 6px;
+    margin-left: 12px;
+    font-size: 80%;
+}
+
+tr.in_spoc {
+    display: none;
+}
+
+.show_in_spoc tr.in_spoc {
+    display: table-row;
+}
+
+#hideShowInSpocCtl {
+    font-size: 80%;
+}
+
+#hideShowInSpocCtl::before {
+    content: "Show";
+}
+
+.show_in_spoc #hideShowInSpocCtl::before {
+    content: "Hide";
+}
 </style>
 """
 
@@ -139,7 +173,42 @@ th.sort {
     df_tess_spoc = tess_spoc_dv_fast.get_tce_infos_of_tic(tic)
     if len(df_tess_spoc) > 0:
         tess_spoc_content = tess_spoc_dv_fast.display_tce_infos(df_tess_spoc, return_as="html")
-        tess_spoc_content = f"<hr><h2>TESS-SPOC TCEs</h2>\n{tess_spoc_content}"
+        # custom id for the table for javascript functions
+        tess_spoc_content = re.sub('<table id="[^"]+"', '<table id="table_tess_spoc"', tess_spoc_content)
+        tess_spoc_content = f"""
+<hr>
+<h2>TESS-SPOC TCEs</h2>
+<div id="tessSpocDupCtr">
+  <span id="tessSpocDupMsg"></span>
+  <button id="hideShowInSpocCtl" onclick="document.body.classList.toggle('show_in_spoc');"></button>
+</div>
+{tess_spoc_content}
+"""
+        # Javscript codes to  hide/show TESS-SPOC TCEs with SPOC counterparts (same tic / sector).
+        # content-wise they are likely to be highly similar.
+        tess_spoc_content += r"""
+<script>
+function addHideShowForTessSpocDupRows() {
+    // mark rows (that are "duplicates" of SPOC TCEs) with css class
+    const spocTceIds = Array.from(document.querySelectorAll('table#table_spoc tbody td:nth-of-type(1)')).map(td => td.textContent);
+    let numInSpoc = 0;
+    document.querySelectorAll('table#table_tess_spoc tbody tr').forEach(tr => {
+        // TESS-SPOC id generation: SPOC id with '_f' suffix. strip  the suffix for comparison
+        const curId = tr.querySelector('td:nth-of-type(1)').textContent.replace('_f', '');
+        if (spocTceIds.includes(curId)) {
+            tr.classList.add('in_spoc');
+            numInSpoc++;
+        }
+    });
+    if (numInSpoc > 0) {
+        document.getElementById('tessSpocDupMsg').textContent = `${numInSpoc} TCEs have SPOC counterparts.`;
+    } else {
+        document.getElementById('tessSpocDupCtr').style.display = 'none';
+    }
+}
+addHideShowForTessSpocDupRows();
+</script>
+"""
     else:  # no TESS-SPOC results, don't show anything
         tess_spoc_content = ""
 
