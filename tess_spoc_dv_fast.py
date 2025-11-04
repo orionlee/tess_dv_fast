@@ -7,6 +7,23 @@ import shutil
 import numpy as np
 import pandas as pd
 
+try:
+    from astropy.table import Column
+
+    _HAS_ASTROPY = False
+except Exception:
+    _HAS_ASTROPY = False
+
+# for tic parameter in get_tce_infos_of_tic(), case a list of TICs
+#
+# Note: use list, tuple explicitly, instead of collection.abc.Sequence,
+# because types such as str also implements Sequence
+if _HAS_ASTROPY:
+    _ARRAY_LIKE_TYPES = (list, tuple, set, np.ndarray, pd.Series, Column)
+else:
+    _ARRAY_LIKE_TYPES = (list, tuple, set, np.ndarray, pd.Series)
+
+
 """
 Fast Lookup of TESS-SPOC TCEs.
 Unlike the SPOC TCEs, TESS-SPOC does not provide summary of TCE parameters, so
@@ -137,8 +154,31 @@ def download_all_data(minimal_db=False):
     shutil.move(dest_csv_tmp, dest_csv)
 
     # convert the master csv into a sqlite db for speedier query by ticid
-    print(f"TODO: DEBUG Convert master tcestats csv to sqlite db, minimal_db={minimal_db}...")
-    # _export_tcestats_as_db(minimal_db)  # TODO:
+    print(f"DEBUG Convert master tess-spoc tcestats csv to sqlite db...")
+    _export_tcestats_as_db()
+
+
+def _export_tcestats_as_db():
+    db_path_tmp = f"{DATA_BASE_DIR}/{TCESTATS_DBNAME}.tmp"
+    db_path = f"{DATA_BASE_DIR}/{TCESTATS_DBNAME}"
+
+    df = _read_tcestats_csv()
+
+    Path(db_path_tmp).unlink(missing_ok=True)
+    con = sqlite3.connect(db_path_tmp)
+    try:  # use try / finally instead of with ... because sqlite3 context manager does not close the connection
+        df.to_sql("tess_spoc_tcestats", con, if_exists="replace", index=False)
+
+        sql_index = "create index tess_spoc_tcestats_ticid on tess_spoc_tcestats(ticid);"
+        cursor = con.cursor()
+        cursor.execute(sql_index)
+        cursor.close()
+
+        con.commit()
+    finally:
+        con.close()
+
+    shutil.move(db_path_tmp, db_path)
 
 
 #
@@ -148,6 +188,34 @@ def _read_tcestats_csv(**kwargs):
     # the master csv is barebone, and meant to be used internally for converting to sqlite db
     csv_path = f"{DATA_BASE_DIR}/{TCESTATS_FILENAME}"
     return pd.read_csv(csv_path, comment="#")
+
+
+def _query_tcestats_from_db(sql, **kwargs):
+    db_uri = f"file:{DATA_BASE_DIR}/{TCESTATS_DBNAME}?mode=ro"  # read-only
+    with sqlite3.connect(db_uri, uri=True) as con:
+        return pd.read_sql(sql, con, **kwargs)
+
+
+def _get_tcestats_of_tic_from_db(tic):
+    if isinstance(tic, (int, float, str)):
+        return _query_tcestats_from_db(
+            "select * from tess_spoc_tcestats where ticid = ?",
+            params=[tic],
+        )
+    elif isinstance(tic, _ARRAY_LIKE_TYPES):
+        #
+        # convert to sqlite driver acceptable type
+        # 1. list, and
+        # 2. of type `int`, e.g., using `np.int32` would result in no match
+        #    (probably requires registering some conversion in the driver)
+        tic = [int(v) for v in tic]
+        in_params_place_holder = ",".join(["?" for i in range(len(tic))])
+        return _query_tcestats_from_db(
+            f"select * from tess_spoc_tcestats where ticid in ({in_params_place_holder})",
+            params=tic,
+        )
+    else:
+        raise TypeError(f"tic must be a scalar or array-like. Actual type: {type(tic).__name__}")
 
 
 def _add_helpful_columns_to_tcestats(df):
@@ -204,8 +272,8 @@ def _add_helpful_columns_to_tcestats(df):
 
 
 def get_tce_infos_of_tic(tic, tce_filter_func=None):
-    # df = _get_tcestats_of_tic_from_db(tic)  # TODO:
-    df = _read_tcestats_csv()  # _get_tess_tcestats_csv("s0056-s0069")  # "s0036-s0036"  # temporary for testing
+    # df = _read_tcestats_csv()  # for testing without db
+    df = _get_tcestats_of_tic_from_db(tic)
     df = df[df["ticid"] == tic]
     _add_helpful_columns_to_tcestats(df)
     # sort the result to the standard form
@@ -241,6 +309,7 @@ if __name__ == "__main__":
         print(f"Downloading data to create master csv and sqlite db")
         download_all_data()
     else:
-        print(f"TODO: Convert master csv to db, minimal_db={args.minimal_db}")
-        # TODO: _export_tcestats_as_db(args.minimal_db)
+        # primarily for debugging
+        print(f"Convert master tess-spoc csv to db")
+        _export_tcestats_as_db()
 
