@@ -1,7 +1,8 @@
 from flask import Flask
 from flask import request, redirect, url_for
 
-import tess_dv_fast
+import tess_dv_fast  # standard SPOC TCEs
+import tess_spoc_dv_fast  # HLSP TESS-SPOC TCEs
 
 
 app = Flask(__name__)
@@ -60,11 +61,11 @@ def tces():
 
     # case do actual search by tic
     df = tess_dv_fast.get_tce_infos_of_tic(tic)
-    res_content = tess_dv_fast.display_tce_infos(df, return_as="html", no_tce_html="No TCE")
+    spoc_content = tess_dv_fast.display_tce_infos(df, return_as="html", no_tce_html="No SPOC TCE")
     # make table searchable / sortable by https://github.com/javve/list.js
-    res_content = res_content.replace("<tbody", '<tbody class="list"')
+    spoc_content = spoc_content.replace("<tbody", '<tbody class="list"')
     for i in [0, 4, 5, 6, 7, 8, 9, 10, 11]:
-        res_content = res_content.replace(
+        spoc_content = spoc_content.replace(
             f'class="col_heading level0 col{i}"',
             f'class="col_heading level0 col{i} sort" data-sort="col{i}"'
             )
@@ -81,6 +82,10 @@ footer {
 
 h1 a {
     text-decoration: none;
+}
+
+h2 { /* make sub header for TESS-SPOC smaller */
+    font-size: 1.2 rem;
 }
 
 table {
@@ -122,6 +127,14 @@ th.sort {
 </style>
 """
 
+    # TESS-SPOC
+    df_tess_spoc = tess_spoc_dv_fast.get_tce_infos_of_tic(tic)
+    if len(df_tess_spoc) > 0:
+        tess_spoc_content = tess_spoc_dv_fast.display_tce_infos(df_tess_spoc, return_as="html")
+        tess_spoc_content = f"<hr><h2>TESS-SPOC TCEs</h2>\n{tess_spoc_content}"
+    else:  # no TESS-SPOC results, don't show anything
+        tess_spoc_content = ""
+
     res = f"""\
 <!DOCTYPE html>
 <html>
@@ -135,7 +148,8 @@ th.sort {
             <h1>TCEs for TIC <a href="https://exofop.ipac.caltech.edu/tess/target.php?id={tic}" target="_exofop">{tic}</a>
             <input class="search" placeholder="Search table" style="margin-left: 40ch;" accesskey="/">
             </h1>
-            {res_content}
+            {spoc_content}
+            {tess_spoc_content}
         </div>
 
         <hr>

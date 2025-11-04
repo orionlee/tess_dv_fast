@@ -273,8 +273,8 @@ def _add_helpful_columns_to_tcestats(df):
 
 def get_tce_infos_of_tic(tic, tce_filter_func=None):
     # df = _read_tcestats_csv()  # for testing without db
+    # df = df[df["ticid"] == tic]
     df = _get_tcestats_of_tic_from_db(tic)
-    df = df[df["ticid"] == tic]
     _add_helpful_columns_to_tcestats(df)
     # sort the result to the standard form
     # so that it is predictable for tce_filter_func
