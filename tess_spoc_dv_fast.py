@@ -285,6 +285,71 @@ def get_tce_infos_of_tic(tic, tce_filter_func=None):
     return df
 
 
+def to_product_url(filename):
+    """Convert the product filenames in columns such as dvs, dvr, etc., to URL to MAST server"""
+    # e.g,  hlsp_tess-spoc_tess_phot_0000000033979459-s0056-s0069_tess_v1_dvs-01.pdf
+    #       hlsp_tess-spoc_tess_phot_0000000033979459-s0056-s0069_tess_v1_dvm.pdf
+
+    match = re.search(r"hlsp_tess-spoc_tess_phot_0+?(?P<ticid>[1-9]\d+)-(?P<sectors>s\d{4}-s\d{4})", filename)
+
+    sector_start, sector_end = match["sectors"].split("-")
+    if sector_start == sector_end:
+        # case single sector
+        sectors = sector_start
+    else:
+        # case multi-sector
+        sectors = match["sectors"]
+
+    ticid = match["ticid"].zfill(16)
+    # split the ticid into 4 parts for the sub directory pattern
+    t1, t2, t3, t4 = ticid[0:4], ticid[4:8], ticid[8:12], ticid[12:16]
+
+    return f"https://mast.stsci.edu/api/v0.1/Download/file/?uri=mast:HLSP/tess-spoc/{sectors}/target/{t1}/{t2}/{t3}/{t4}/{filename}"
+
+
+def display_tce_infos(df, return_as=None, no_tce_html=None):
+
+    display_columns = [
+        "id",
+        # "ticid",
+        # "tce_plnt_num",
+        # "sectors",
+        "dvs",
+        "dvm",
+        "dvr",
+    ]
+
+    if len(df["ticid"].unique()) > 1:
+        # case multiple TICs in the result
+        # prepend ticid to the columns to be displayed to differentiate between them
+        display_columns = ["ticid"] + display_columns
+
+    def format_id(id):
+        # for TESS-SPOC, it is not available on ExoMAST, so we simply return a abbrevated ID
+        short_name = re.sub(r"TIC\d+", "", id).lower()
+        return short_name
+
+    format_specs = {
+        "id": format_id,
+        "dvs": lambda f: f'<a target="_blank" href="{to_product_url(f)}">dvs</a>',
+        "dvm": lambda f: f'<a target="_blank" href="{to_product_url(f)}">dvm</a>',
+        "dvr": lambda f: f'<a target="_blank" href="{to_product_url(f)}">dvr</a>',
+    }
+
+    with pd.option_context("display.max_colwidth", None, "display.max_rows", 999, "display.max_columns", 99):
+        styler = df[display_columns].style.format(format_specs).hide(axis="index")
+        # hack to add units to the header
+        html = styler.to_html()
+        if len(df) < 1 and no_tce_html is not None:
+            html = no_tce_html
+        if return_as is None:
+            from IPython.display import display, HTML
+
+            return display(HTML(html))
+        elif return_as == "html":
+            return html
+
+
 # update the DB / master csv from command line
 if __name__ == "__main__":
     import argparse
