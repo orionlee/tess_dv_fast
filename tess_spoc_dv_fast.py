@@ -42,7 +42,7 @@ TCESTATS_DBNAME = "tess_spoc_tcestats.db"
 
 sources_dv_sh_single_sector = [
     ("https://archive.stsci.edu/hlsps/tess-spoc/download_scripts/"
-     f"hlsp_tess-spoc_tess_phot_s{sec:04d}_tess_v1_dl-dv.sh") for sec in range(36, 37 + 1)
+     f"hlsp_tess-spoc_tess_phot_s{sec:04d}_tess_v1_dl-dv.sh") for sec in range(36, 77 + 1)
 ]
 
 
@@ -181,9 +181,11 @@ def _export_tcestats_as_db():
     shutil.move(db_path_tmp, db_path)
 
 
+# Volume note:
+# for sectors 36-77, there is ~250K TCEs, the db is ~9Mb, while the csv is ~6Mb
 #
-# lookup
-
+# Query Logic
+#
 def _read_tcestats_csv(**kwargs):
     # the master csv is barebone, and meant to be used internally for converting to sqlite db
     csv_path = f"{DATA_BASE_DIR}/{TCESTATS_FILENAME}"
