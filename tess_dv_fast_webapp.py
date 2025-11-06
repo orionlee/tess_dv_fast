@@ -218,7 +218,7 @@ addHideShowForTessSpocDupRows();
     <head>
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <link rel="icon" href="data:,">
-        <title>({len(df)}) TCEs for TIC {tic}</title>
+        <title>({len(df) + len(df_tess_spoc)}) TCEs for TIC {tic}</title>
     </head>
     <body>
         <div id="result">
