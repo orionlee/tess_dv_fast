@@ -5,10 +5,20 @@
 
 base=`dirname $0`
 dest=$1
-
 if [ "$dest" == "" ]; then
     dest=$base/../build
 fi
+
+# the commit SHA
+# - in gcloud continuous deployment env, it will be supplied as a parameter
+#   (git not available in gcloud's bash build step)
+# - in local build, we generates it locally
+commit_sha=$2
+if [ "$commit_sha" == "" ]; then
+  commit_sha=`git rev-parse HEAD`
+  echo To save commit SHA in build: $commit_sha
+fi
+
 
 set -e
 
@@ -22,6 +32,9 @@ cp --update --archive  $base/../data/tess_dv_fast/tess_spoc_tcestats.db  $dest/d
 cp --update --archive  $base/*  $dest
 cp --update --archive  $base/.*  $dest
 cp --update --archive  $base/../tess_dv_fast.py $base/../tess_spoc_dv_fast.py $base/../tess_dv_fast_webapp.py  $dest
+
+# save commit SHA to be displayed in the UI.
+echo $commit_sha > $dest/build.txt
 
 echo SQLite database included in the deployment:
 ls -l $dest/data/tess_dv_fast/tess*_tcestats.db

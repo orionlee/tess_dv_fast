@@ -1,3 +1,5 @@
+from functools import cache
+import logging
 import re
 
 from flask import Flask
@@ -8,11 +10,27 @@ import tess_spoc_dv_fast  # HLSP TESS-SPOC TCEs
 
 
 app = Flask(__name__)
+log = logging.getLogger(__name__)
 
 
-@app.route('/')
-def index():
-    return redirect(url_for('tces'))
+@cache
+def get_build_sha():
+    from pathlib import Path
+
+    build_fname = Path(__file__).parent / "build.txt"
+    try:
+        with build_fname.open() as f:
+            return f.readline().strip()
+    except FileNotFoundError:
+        # in dev mode from source, build.txt is not generated
+        return ""
+    except Exception as e:
+        log.error(f"get_build_sha(): Unexpected error, return empty string. {e}")
+        return ""
+
+
+def get_build_sha_short():
+    return get_build_sha()[:8]
 
 
 def _render_home():
@@ -58,7 +76,10 @@ def _render_home():
             </ul>
 
             <br>
-            <a href="https://github.com/orionlee/tess_dv_fast/" target="_blank">Sources /Issues</a>
+            <a href="https://github.com/orionlee/tess_dv_fast/" target="_blank">Sources /Issues</a><br>
+            Build:
+            <a target="_blank" href="https://github.com/orionlee/tess_dv_fast/commit/{get_build_sha()}"
+                >{get_build_sha_short()}</a><br>
         </footer>
     </body>
 </html>
@@ -214,6 +235,14 @@ tr.in_spoc {
 </style>
 """
     return tess_spoc_content, tess_spoc_css
+
+#
+# Entry point function for flask routes
+#
+
+@app.route('/')
+def index():
+    return redirect(url_for('tces'))
 
 
 @app.route("/tces")
