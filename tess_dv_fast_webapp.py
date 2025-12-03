@@ -47,6 +47,7 @@ def _render_home():
         <style type="text/css">
         body {
             margin-left: 16px;
+            font-family: sans-serif;
         }
         </style>
         <form>
@@ -103,6 +104,7 @@ def _render_spoc_content(df_spoc):
 <style type="text/css">
 body {
     margin-left: 16px;
+    font-family: sans-serif;
 }
 
 footer {
