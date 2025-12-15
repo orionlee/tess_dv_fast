@@ -26,11 +26,12 @@ conda install --file requirements.txt
 Download the required data and build the local database.
 
 ```shell
-python tess_dv_fast.py --update --minimal_db
-python tess_spoc_dv_fast.py   --update
+python tess_dv_fast_build.py --update --minimal_db
+python tess_spoc_dv_fast_build.py --update
 ```
 
 Start the webapp:
+
 ```shell
 flask --app tess_dv_fast_webapp run
 ```
