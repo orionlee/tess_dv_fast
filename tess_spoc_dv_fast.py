@@ -20,24 +20,7 @@ from tess_dv_fast_common import ARRAY_LIKE_TYPES
 from tess_spoc_dv_fast_spec import (
     DATA_BASE_DIR,
     TCESTATS_DBNAME,
-    sources_dv_sh_single_sector,
-    sources_dv_sh_multi_sector,
 )
-
-
-def get_high_watermarks():
-
-    latest_single_sector_url = sources_dv_sh_single_sector[-1]
-    latest_single_sector_match = re.search(r"(s\d+)", latest_single_sector_url)
-    if latest_single_sector_match is not None:
-        latest_single_sector = latest_single_sector_match[1]
-
-    latest_multi_sector_url = sources_dv_sh_multi_sector[-1]
-    latest_multi_sector_match = re.search(r"(s\d+-s\d+)", latest_multi_sector_url)
-    if latest_multi_sector_match is not None:
-        latest_multi_sector = latest_multi_sector_match[1]
-
-    return dict(single_sector=latest_single_sector, multi_sector=latest_multi_sector)
 
 
 def _query_tcestats_from_db(sql: str, **kwargs) -> pd.DataFrame:

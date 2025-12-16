@@ -7,7 +7,9 @@ from flask import request
 from markupsafe import escape
 
 import tess_dv_fast  # standard SPOC TCEs
+import tess_dv_fast_spec
 import tess_spoc_dv_fast  # HLSP TESS-SPOC TCEs
+import tess_spoc_dv_fast_spec
 
 
 app = Flask(__name__)
@@ -62,8 +64,8 @@ def _render_home():
             <input type="Submit"></input>
         </form>
 """
-    spoc_high_watermarks = tess_dv_fast.get_high_watermarks()
-    tess_spoc_high_watermarks = tess_spoc_dv_fast.get_high_watermarks()
+    spoc_high_watermarks = tess_dv_fast_spec.get_high_watermarks()
+    tess_spoc_high_watermarks = tess_spoc_dv_fast_spec.get_high_watermarks()
     return most_of_html + f"""
         <footer style="margin-top: 5vh; font-size: 85%;">
             <p>SPOC (2 min cadence): based on data published by <a href="https://archive.stsci.edu/" target="_blank">MAST</a>:</p>
