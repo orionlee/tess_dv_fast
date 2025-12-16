@@ -1,6 +1,7 @@
 """TESS TCE (SPOC) data specifications and source URLs."""
 
 from pathlib import Path
+import re
 
 DATA_BASE_DIR = f"{Path(__file__).parent}/data/tess_dv_fast"
 
@@ -261,3 +262,17 @@ sources_dv_sh_multi_sector = [
     "https://archive.stsci.edu/missions/tess/download_scripts/sector/tesscurl_multisector_s0014-s0086_dv.sh",
     "https://archive.stsci.edu/missions/tess/download_scripts/sector/tesscurl_multisector_s0001-s0092_dv.sh",
 ]
+
+
+def get_high_watermarks():
+    latest_single_sector_url = sources_tcestats_single_sector[-1]
+    latest_single_sector_match = re.search(r"(s\d+)_dvr-tcestats", latest_single_sector_url)
+    if latest_single_sector_match is not None:
+        latest_single_sector = latest_single_sector_match[1]
+
+    latest_multi_sector_url = sources_tcestats_multi_sector[-1]
+    latest_multi_sector_match = re.search(r"(s\d+-s\d+)_dvr-tcestats", latest_multi_sector_url)
+    if latest_multi_sector_match is not None:
+        latest_multi_sector = latest_multi_sector_match[1]
+
+    return dict(single_sector=latest_single_sector, multi_sector=latest_multi_sector)
