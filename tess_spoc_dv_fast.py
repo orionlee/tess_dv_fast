@@ -11,25 +11,11 @@ https://archive.stsci.edu/hlsp/tess-spoc
 
 import re
 import sqlite3
+from typing import Callable, Optional, Union
 
-import numpy as np
 import pandas as pd
 
-try:
-    from astropy.table import Column
-
-    _HAS_ASTROPY = False
-except Exception:
-    _HAS_ASTROPY = False
-
-# for tic parameter in get_tce_infos_of_tic(), case a list of TICs
-#
-# Note: use list, tuple explicitly, instead of collection.abc.Sequence,
-# because types such as str also implements Sequence
-if _HAS_ASTROPY:
-    _ARRAY_LIKE_TYPES = (list, tuple, set, np.ndarray, pd.Series, Column)
-else:
-    _ARRAY_LIKE_TYPES = (list, tuple, set, np.ndarray, pd.Series)
+from tess_dv_fast_common import ARRAY_LIKE_TYPES
 
 from tess_spoc_dv_fast_spec import (
     DATA_BASE_DIR,
@@ -54,19 +40,19 @@ def get_high_watermarks():
     return dict(single_sector=latest_single_sector, multi_sector=latest_multi_sector)
 
 
-def _query_tcestats_from_db(sql, **kwargs):
+def _query_tcestats_from_db(sql: str, **kwargs) -> pd.DataFrame:
     db_uri = f"file:{DATA_BASE_DIR}/{TCESTATS_DBNAME}?mode=ro"  # read-only
     with sqlite3.connect(db_uri, uri=True) as con:
         return pd.read_sql(sql, con, **kwargs)
 
 
-def _get_tcestats_of_tic_from_db(tic):
+def _get_tcestats_of_tic_from_db(tic: Union[int, float, str, tuple, list]) -> pd.DataFrame:
     if isinstance(tic, (int, float, str)):
         return _query_tcestats_from_db(
             "select * from tess_spoc_tcestats where ticid = ?",
             params=[tic],
         )
-    elif isinstance(tic, _ARRAY_LIKE_TYPES):
+    elif isinstance(tic, ARRAY_LIKE_TYPES):
         #
         # convert to sqlite driver acceptable type
         # 1. list, and
@@ -82,7 +68,7 @@ def _get_tcestats_of_tic_from_db(tic):
         raise TypeError(f"tic must be a scalar or array-like. Actual type: {type(tic).__name__}")
 
 
-def _add_helpful_columns_to_tcestats(df):
+def _add_helpful_columns_to_tcestats(df: pd.DataFrame) -> None:
     def add_id(df):
         # add an ID column, analogous to exomast_id in SPOC TCEs
         # the format is exomast_id with a suffix (to signify it is from TESS-SPOC)
@@ -135,7 +121,10 @@ def _add_helpful_columns_to_tcestats(df):
     return
 
 
-def get_tce_infos_of_tic(tic, tce_filter_func=None):
+def get_tce_infos_of_tic(
+    tic: Union[int, float, str, tuple, list],
+    tce_filter_func: Optional[Callable[[pd.DataFrame], pd.DataFrame]] = None,
+) -> pd.DataFrame:
     # df = _read_tcestats_csv()  # for testing without db
     # df = df[df["ticid"] == tic]
     df = _get_tcestats_of_tic_from_db(tic)
@@ -149,7 +138,7 @@ def get_tce_infos_of_tic(tic, tce_filter_func=None):
     return df
 
 
-def to_product_url(filename):
+def to_product_url(filename: str) -> str:
     """Convert the product filenames in columns such as dvs, dvr, etc., to URL to MAST server"""
     # e.g,  hlsp_tess-spoc_tess_phot_0000000033979459-s0056-s0069_tess_v1_dvs-01.pdf
     #       hlsp_tess-spoc_tess_phot_0000000033979459-s0056-s0069_tess_v1_dvm.pdf
@@ -171,7 +160,11 @@ def to_product_url(filename):
     return f"https://mast.stsci.edu/api/v0.1/Download/file/?uri=mast:HLSP/tess-spoc/{sectors}/target/{t1}/{t2}/{t3}/{t4}/{filename}"
 
 
-def display_tce_infos(df, return_as=None, no_tce_html=None):
+def display_tce_infos(
+    df: pd.DataFrame,
+    return_as: Optional[str] = None,
+    no_tce_html: Optional[str] = None,
+) -> Optional[Union[str, None]]:
 
     display_columns = [
         "id",
