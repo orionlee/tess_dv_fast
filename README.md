@@ -51,18 +51,18 @@ Notes:
 
 The package relies on TCE bulk download data provided by MAST. When new data is available, the local database needs to be updated.
 
-1. In `tess_dv_fast.py` (SPOC),
+1. In `tess_dv_fast_spec.py` (SPOC),
     - update `sources_tcestats_single_sector` and `sources_tcestats_multi_sector` to include the URLs of the new TCE `csv` files at: https://archive.stsci.edu/tess/bulk_downloads/bulk_downloads_tce.html .
     - update `sources_dv_sh_single_sector` and `sources_dv_sh_multi_sector` to include the URLs of the new DV download `sh` files at: https://archive.stsci.edu/tess/bulk_downloads/bulk_downloads_ffi-tp-lc-dv.html .
 
-2. In `tess_spoc_fast.py` (TESS-SPOC),
+2. In `tess_spoc_fast_spec.py` (TESS-SPOC),
     - update `sources_dv_sh_single_sector` and `sources_dv_sh_multi_sector` to include the URLs of the new DV download `sh` files at: https://archive.stsci.edu/hlsp/tess-spoc .
 
 3. Update the database:
 
 ```shell
-python tess_dv_fast.py --update --minimal_db
-python tess_spoc_dv_fast.py   --update
+python tess_dv_fast_build.py --update --minimal_db
+python tess_spoc_dv_fast_build.py --update
 ```
 
 ## Deploying the app to cloud environments
