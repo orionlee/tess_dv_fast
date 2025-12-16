@@ -6,27 +6,18 @@ https://archive.stsci.edu/missions-and-data/tess
 
 import re
 import sqlite3
+from typing import Callable, Optional, Union
 
-import numpy as np
 import pandas as pd
 
-try:
-    from astropy.table import Column
-
-    _HAS_ASTROPY = False
-except Exception:
-    _HAS_ASTROPY = False
-
-# for tic parameter in get_tce_infos_of_tic(), case a list of TICs
-#
-# Note: use list, tuple explicitly, instead of collection.abc.Sequence,
-# because types such as str also implements Sequence
-if _HAS_ASTROPY:
-    _ARRAY_LIKE_TYPES = (list, tuple, set, np.ndarray, pd.Series, Column)
-else:
-    _ARRAY_LIKE_TYPES = (list, tuple, set, np.ndarray, pd.Series)
-
-
+from tess_dv_fast_common import (
+    ARRAY_LIKE_TYPES,
+    R_EARTH_TO_R_JUPITER,
+    format_exomast_id,
+    format_offset_n_sigma,
+    format_codes,
+    add_html_column_units,
+)
 from tess_dv_fast_spec import (
     DATA_BASE_DIR,
     TCESTATS_FILENAME,
@@ -50,19 +41,19 @@ def get_high_watermarks():
     return dict(single_sector=latest_single_sector, multi_sector=latest_multi_sector)
 
 
-def read_tcestats_csv(**kwargs):
+def read_tcestats_csv(**kwargs) -> pd.DataFrame:
     # for ~230k rows of TCE stats data, it took 4-10secs, taking up 200+Mb memory.
     csv_path = f"{DATA_BASE_DIR}/{TCESTATS_FILENAME}"
     return pd.read_csv(csv_path, comment="#", dtype={"tce_sectors": str}, **kwargs)
 
 
-def _query_tcestats_from_db(sql, **kwargs):
+def _query_tcestats_from_db(sql: str, **kwargs) -> pd.DataFrame:
     db_uri = f"file:{DATA_BASE_DIR}/{TCESTATS_DBNAME}?mode=ro"  # read-only
     with sqlite3.connect(db_uri, uri=True) as con:
         return pd.read_sql(sql, con, **kwargs)
 
 
-def _get_tcestats_of_tic_from_db(tic):
+def _get_tcestats_of_tic_from_db(tic: Union[int, float, str, tuple, list]) -> pd.DataFrame:
     # OPEN: support optional columns parameter?
     # - double quote the column names in the constructed SQL
     #   would be sufficient wo avoid SQL injection
@@ -73,7 +64,7 @@ def _get_tcestats_of_tic_from_db(tic):
             "select * from tess_tcestats where ticid = ?",
             params=[tic],
         )
-    elif isinstance(tic, _ARRAY_LIKE_TYPES):
+    elif isinstance(tic, ARRAY_LIKE_TYPES):
         #
         # convert to sqlite driver acceptable type
         # 1. list, and
@@ -89,7 +80,10 @@ def _get_tcestats_of_tic_from_db(tic):
         raise TypeError(f"tic must be a scalar or array-like. Actual type: {type(tic).__name__}")
 
 
-def get_tce_infos_of_tic(tic, tce_filter_func=None):
+def get_tce_infos_of_tic(
+    tic: Union[int, float, str, tuple, list],
+    tce_filter_func: Optional[Callable[[pd.DataFrame], pd.DataFrame]] = None,
+) -> pd.DataFrame:
     df = _get_tcestats_of_tic_from_db(tic)
     _add_helpful_columns_to_tcestats(df)
     # sort the result to the standard form
@@ -101,10 +95,7 @@ def get_tce_infos_of_tic(tic, tce_filter_func=None):
     return df
 
 
-R_EARTH_TO_R_JUPITER = 6378.1 / 71492
-
-
-def _add_helpful_columns_to_tcestats(df):
+def _add_helpful_columns_to_tcestats(df: pd.DataFrame) -> None:
     def get_sectors_span(sectors_str):
         match = re.match(r"s(\d+)-s(\d+)", sectors_str)
         if match is None:
@@ -138,12 +129,16 @@ def _add_helpful_columns_to_tcestats(df):
     # Note: model's stellar density, `starDensitySolarDensity` in dvr xml, is not available in csv
 
 
-def to_product_url(filename):
+def to_product_url(filename: str) -> str:
     """Convert the product filenames in columns such as dvs, dvr, etc., to URL to MAST server"""
     return f"https://mast.stsci.edu/api/v0.1/Download/file/?uri=mast:TESS/product/{filename}"
 
 
-def display_tce_infos(df, return_as=None, no_tce_html=None):
+def display_tce_infos(
+    df: pd.DataFrame,
+    return_as: Optional[str] = None,
+    no_tce_html: Optional[str] = None,
+) -> Optional[Union[str, None]]:
     df["Codes"] = (
         "epoch=" + df["tce_time0bt"].astype(str) + ", "
         "duration_hr=" + df["tce_duration"].astype(str) + ", "
@@ -191,38 +186,14 @@ def display_tce_infos(df, return_as=None, no_tce_html=None):
         # prepend ticid to the columns to be displayed to differentiate between them
         display_columns = ["ticid"] + display_columns
 
-    def format_exomast_id(id):
-        short_name = re.sub(r"TIC\d+", "", id).lower()
-        return f'<a target="_exomast" href="https://exo.mast.stsci.edu/exomast_planet.html?planet={id}">{short_name}</a>'
-
-    def format_offset_n_sigma(val_sigma_str):
-        # format TicOffset / OotOffset, to value (sigma)
-        try:
-            if val_sigma_str == "0.0|-0.0":
-                # special case TCE has no offset, indicated by offset == 0 and error == -1 in the source csv
-                return "N/A"
-            val, sigma = val_sigma_str.split("|")
-            val = float(val)
-            sigma = float(sigma)
-            if sigma >= 3:
-                sigma_style = ' style="color: red; font-weight: bold;"'
-            else:
-                sigma_style = ""
-            return f"{val:.0f} <span{sigma_style}>({sigma:.1f})</span>"
-        except Exception:
-            # in case something unexpected, fallback to raw str to avoid exception in display
-            return val_sigma_str
-
-    def format_codes(codes):
-        return f"""\
-<input type="text" style="margin-left: 3ch; font-size: 90%; color: #666; width: 10ch;"
-    onclick="this.select();" readonly value='{codes}'>"""
+    def _format_product_link(f):
+        return f'<a target="_blank" href="{to_product_url(f)}">dvs</a>'
 
     format_specs = {
         "exomast_id": format_exomast_id,
-        "dvs": lambda f: f'<a target="_blank" href="{to_product_url(f)}">dvs</a>',
-        "dvm": lambda f: f'<a target="_blank" href="{to_product_url(f)}">dvm</a>',
-        "dvr": lambda f: f'<a target="_blank" href="{to_product_url(f)}">dvr</a>',
+        "dvs": _format_product_link,
+        "dvm": _format_product_link,
+        "dvr": _format_product_link,
         "Rp": "{:.3f}",
         "Epoch": "{:.2f}",  # the csv has 2 digits precision
         "Duration": "{:.4f}",
@@ -236,15 +207,7 @@ def display_tce_infos(df, return_as=None, no_tce_html=None):
 
     with pd.option_context("display.max_colwidth", None, "display.max_rows", 999, "display.max_columns", 99):
         styler = df[display_columns].style.format(format_specs).hide(axis="index")
-        # hack to add units to the header
-        html = styler.to_html()
-        html = html.replace(">Rp</th>", ">R<sub>p</sub><br>R<sub>j</sub></th>", 1)
-        html = html.replace(">Epoch</th>", ">Epoch<br>BTJD</th>", 1)
-        html = html.replace(">Duration</th>", ">Duration<br>hr</th>", 1)
-        html = html.replace(">Period</th>", ">Period<br>day</th>", 1)
-        html = html.replace(">Depth</th>", ">Depth<br>%</th>", 1)
-        html = html.replace(">TicOffset</th>", '>TicOffset<br>" (σ)</th>', 1)
-        html = html.replace(">OotOffset</th>", '>OotOffset<br>" (σ)</th>', 1)
+        html = add_html_column_units(styler.to_html())
         if len(df) < 1 and no_tce_html is not None:
             html = no_tce_html
         if return_as is None:

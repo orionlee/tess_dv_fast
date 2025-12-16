@@ -31,7 +31,7 @@ cp --update --archive  $base/../data/tess_dv_fast/tess_spoc_tcestats.db  $dest/d
 
 cp --update --archive  $base/*  $dest
 cp --update --archive  $base/.*  $dest
-cp --update --archive  $base/../tess_dv_fast.py $base/../tess_dv_fast_spec.py $base/../tess_dv_fast_webapp.py  $dest
+cp --update --archive  $base/../tess_dv_fast_common.py $base/../tess_dv_fast.py $base/../tess_dv_fast_spec.py $base/../tess_dv_fast_webapp.py  $dest
 cp --update --archive  $base/../tess_spoc_dv_fast.py $base/../tess_spoc_dv_fast_spec.py  $dest
 
 # save commit SHA to be displayed in the UI.
