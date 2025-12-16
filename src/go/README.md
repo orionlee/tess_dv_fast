@@ -102,6 +102,15 @@ curl 'http://localhost:8080/tces'              # Get search form
 curl 'http://localhost:8080/tces?tic=261136679' # Search a TIC
 ```
 
+## Deployment to Google Cloud Run
+
+```bash
+# copy the SQLite db files, so they can be included in the deployment
+mkdir -p data/tess_dv_fast
+cp ../../data/tess_dv_fast/*.db ./data/tess_dv_fast/
+gcloud run deploy <service-name> --source .
+```
+
 ## Features
 
 - TIC input validation (must be positive integer)
@@ -139,8 +148,10 @@ The database should contain a `tess_tcestats` table with columns:
 
 ## Future Enhancements
 
+- [ ] Add missing links to the DV reports (columns dvs, dvm, dvr)
+- [ ] Minor UI features: in-page table sort / filter, accurate high watermarks, commit hash
 - [ ] TESS-SPOC TCE support
-- [ ] Docker support
+- [x] Docker support
 - [ ] Template-based HTML rendering
 - [ ] Configuration file support
 - [ ] Logging with structured logs
