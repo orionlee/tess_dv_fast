@@ -16,3 +16,8 @@ data/
 
 # for gcloud, etc.
 build/
+
+# Go version (of the webapp) binary outputs
+src/go/tess_dv_fast_server*
+# e.g. server.log might be created during dev/testing
+src/go/*.log
