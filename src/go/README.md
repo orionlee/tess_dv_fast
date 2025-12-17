@@ -144,19 +144,6 @@ The database should contain a `tess_tcestats` table with columns:
 2. **Framework**: Uses standard library HTTP server for routing (Python used Flask)
 3. **Performance**: Typically faster due to Go's compiled nature
 4. **Deployment**: Single binary executable vs Python installation requirements
-5. **TESS-SPOC**: Not yet implemented in Go version (Python version had this)
-
-## Future Enhancements
-
-- [ ] Add missing links to the DV reports (columns dvs, dvm, dvr)
-- [ ] Minor UI features: in-page table sort / filter, accurate high watermarks, commit hash
-- [ ] TESS-SPOC TCE support
-- [x] Docker support
-- [ ] Template-based HTML rendering
-- [ ] Configuration file support
-- [ ] Logging with structured logs
-- [ ] API endpoints for machine-readable results
-- [ ] Caching for frequent queries
 
 ## License
 
