@@ -19,6 +19,9 @@ type TCERecord struct {
 	ExoMastID       string
 	Sectors         string
 	TCEPlanetNum    int
+	DVS             string
+	DVM             string
+	DVR             string
 	TCEDepth        float64
 	TCEPeriod       float64
 	TCETime0BT      float64
@@ -34,6 +37,9 @@ type TCERecord struct {
 // TCEDisplayInfo represents formatted TCE info for display
 type TCEDisplayInfo struct {
 	ExoMastID    string
+	DVS          string
+	DVM          string
+	DVR          string
 	TICOffset    string
 	OotOffset    string
 	Codes        string
@@ -57,7 +63,7 @@ func GetTCEInfosOfTIC(tic int64) ([]TCERecord, error) {
 	}
 	defer db.Close()
 
-	rows, err := db.Query("SELECT ticid, exomast_id, sectors, tce_plnt_num, tce_depth, tce_period, tce_time0bt, tce_duration, tce_prad, tce_impact, tce_ditco_msky, tce_ditco_msky_err, tce_dicco_msky, tce_dicco_msky_err FROM tess_tcestats WHERE ticid = ?", tic)
+	rows, err := db.Query("SELECT ticid, exomast_id, sectors, tce_plnt_num, dvs, dvm, dvr, tce_depth, tce_period, tce_time0bt, tce_duration, tce_prad, tce_impact, tce_ditco_msky, tce_ditco_msky_err, tce_dicco_msky, tce_dicco_msky_err FROM tess_tcestats WHERE ticid = ?", tic)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query database: %w", err)
 	}
@@ -71,6 +77,9 @@ func GetTCEInfosOfTIC(tic int64) ([]TCERecord, error) {
 			&r.ExoMastID,
 			&r.Sectors,
 			&r.TCEPlanetNum,
+			&r.DVS,
+			&r.DVM,
+			&r.DVR,
 			&r.TCEDepth,
 			&r.TCEPeriod,
 			&r.TCETime0BT,
@@ -125,11 +134,19 @@ func FormatTCEForDisplay(record TCERecord) TCEDisplayInfo {
 		diccoSig = record.TCEDiccoMsky / record.TCEDiccoMskyErr
 	}
 
+	// Format DVS, DVM, DVR as links to MAST products
+	dvsLink := formatProductLink(record.DVS)
+	dvmLink := formatProductLink(record.DVM)
+	dvrLink := formatProductLink(record.DVR)
+
 	return TCEDisplayInfo{
 		ExoMastID:    common.FormatExoMastID(record.ExoMastID),
+		DVS:          dvsLink,
+		DVM:          dvmLink,
+		DVR:          dvrLink,
 		TICOffset:    common.FormatOffsetNSigma(fmt.Sprintf("%.1f|%.1f", record.TCEDitcoMsky, ditcoSig)),
 		OotOffset:    common.FormatOffsetNSigma(fmt.Sprintf("%.1f|%.1f", record.TCEDiccoMsky, diccoSig)),
-		Codes:        generateCodes(record),
+		Codes:        formatCodesAsInput(generateCodes(record)),
 		Period:       record.TCEPeriod,
 		Epoch:        record.TCETime0BT,
 		Duration:     record.TCEDuration,
@@ -153,6 +170,29 @@ func generateCodes(record TCERecord) string {
 	)
 }
 
+// formatProductLink formats a product filename as a clickable link to MAST
+func formatProductLink(filename string) string {
+	if filename == "" {
+		return ""
+	}
+	// Extract the product type (dvs, dvm, or dvr) from filename
+	// e.g., "tess...._dvs.pdf" -> "dvs"
+	linkText := filename
+	if idx := strings.LastIndex(filename, "_"); idx != -1 {
+		// Get the part after the last underscore and before the extension
+		suffix := filename[idx+1:]
+		if idx2 := strings.Index(suffix, "."); idx2 != -1 {
+			linkText = suffix[:idx2]
+		}
+	}
+	return fmt.Sprintf(`<a target="_blank" href="%s">%s</a>`, ToProductURL(filename), linkText)
+}
+
+// formatCodesAsInput wraps the codes string in an HTML input element for easy copying
+func formatCodesAsInput(codes string) string {
+	return fmt.Sprintf(`<input type="text" value='%s' readonly style="margin-left: 3ch; font-size: 90%%; color: #666; width: 10ch;" onclick="this.select();">`, codes)
+}
+
 // RenderTCETable renders TCE records as an HTML table
 func RenderTCETable(records []TCERecord) string {
 	if len(records) == 0 {
@@ -161,14 +201,17 @@ func RenderTCETable(records []TCERecord) string {
 
 	var html strings.Builder
 	html.WriteString(`<table id="table_spoc"><thead><tr>`)
-	html.WriteString(`<th>ID</th><th>Period</th><th>Epoch</th><th>Duration</th><th>Rp</th>`)
-	html.WriteString(`<th>Depth</th><th>Impact b</th><th>TicOffset</th><th>OotOffset</th>`)
+	html.WriteString(`<th>exomast_id</th><th>dvs</th><th>dvm</th><th>dvr</th><th>Period</th><th>Epoch</th><th>Duration</th><th>Rp</th>`)
+	html.WriteString(`<th>Depth</th><th>Impact b</th><th>TicOffset</th><th>OotOffset</th><th>Codes</th>`)
 	html.WriteString(`</tr></thead><tbody>`)
 
 	for _, record := range records {
 		display := FormatTCEForDisplay(record)
 		html.WriteString(`<tr>`)
 		html.WriteString(fmt.Sprintf(`<td>%s</td>`, display.ExoMastID))
+		html.WriteString(fmt.Sprintf(`<td>%s</td>`, display.DVS))
+		html.WriteString(fmt.Sprintf(`<td>%s</td>`, display.DVM))
+		html.WriteString(fmt.Sprintf(`<td>%s</td>`, display.DVR))
 		html.WriteString(fmt.Sprintf(`<td>%.6f</td>`, display.Period))
 		html.WriteString(fmt.Sprintf(`<td>%.1f</td>`, display.Epoch))
 		html.WriteString(fmt.Sprintf(`<td>%.3f</td>`, display.Duration))
@@ -177,6 +220,7 @@ func RenderTCETable(records []TCERecord) string {
 		html.WriteString(fmt.Sprintf(`<td>%.3f</td>`, display.ImpactB))
 		html.WriteString(fmt.Sprintf(`<td>%s</td>`, display.TICOffset))
 		html.WriteString(fmt.Sprintf(`<td>%s</td>`, display.OotOffset))
+		html.WriteString(fmt.Sprintf(`<td>%s</td>`, display.Codes))
 		html.WriteString(`</tr>`)
 	}
 
