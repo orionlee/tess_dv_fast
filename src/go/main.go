@@ -24,8 +24,8 @@ const (
 )
 
 // Sortable columns: col0 (exomast_id), col4-col11 (numeric columns), but NOT col1-col3 (product links) or col12 (codes)
-// - note: needs to be in sync with the javascript codes (List object) created
-//   in handleTCES()
+//   - note: needs to be in sync with the javascript codes (List object) created
+//     in handleTCES()
 var spoc_sortable_columns_idx = []int{0, 4, 5, 6, 7, 8, 9, 10, 11}
 
 func init() {
@@ -71,7 +71,7 @@ func handleTCES(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 
 	ticStr := r.URL.Query().Get("tic")
-
+	pipeline := r.URL.Query().Get("pipeline")
 	// Return search form if no TIC provided
 	if ticStr == "" {
 		w.WriteHeader(http.StatusOK)
@@ -98,28 +98,82 @@ func handleTCES(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Query SPOC TCEs
-	spocRecords, err := query.GetTCEInfosOfTIC(ticInt)
-	if err != nil {
-		log.Printf("Query failed for TIC %d: %v", ticInt, err)
-		renderError(w, fmt.Sprintf("Database query failed. Please try again later. (Details: %s)", html.EscapeString(err.Error())), http.StatusInternalServerError)
-		return
+	// Query appropriate TCE database based on type
+	var spocRecords []query.TCERecord
+	var tessSpocRecords []query.TCERecord
+	var showBoth bool
+
+	switch pipeline {
+	case "tess_spoc":
+		// TESS-SPOC (FFI) TCEs only
+		tessSpocRecords, err = query.GetTessSpocTCEInfosOfTIC(ticInt)
+	case "spoc":
+		// SPOC (2-min cadence) TCEs only
+		spocRecords, err = query.GetTCEInfosOfTIC(ticInt)
+	default:
+		// Fetch both SPOC and TESS-SPOC by default
+		showBoth = true
+		spocRecords, err = query.GetTCEInfosOfTIC(ticInt)
+		if err != nil {
+			// Log but continue to try TESS-SPOC
+			log.Printf("SPOC query failed for TIC %d: %v", ticInt, err)
+		}
+		tessSpocRecords, err = query.GetTessSpocTCEInfosOfTIC(ticInt)
+		if err != nil {
+			// Log but continue - may only have SPOC data
+			log.Printf("TESS-SPOC query failed for TIC %d: %v", ticInt, err)
+		}
+		// If both queries failed, report error
+		if len(spocRecords) == 0 && len(tessSpocRecords) == 0 {
+			renderError(w, "No TCE data found for this TIC ID.", http.StatusNotFound)
+			return
+		}
 	}
 
 	// Render content
-	spocContent := query.RenderTCETable(spocRecords)
-	spocContent = applyTableStyling(spocContent, spoc_table_id, spoc_sortable_columns_idx)
+	var spocContent string
+	var tessSpocContent string
+
+	if len(spocRecords) > 0 {
+		spocContent = query.RenderTCETable(spocRecords)
+		spocContent = applyTableStyling(spocContent, "table_spoc", spoc_sortable_columns_idx)
+	}
+
+	if len(tessSpocRecords) > 0 {
+		tessSpocContent = query.RenderTessSpocTCETable(tessSpocRecords)
+		// TESS-SPOC table doesn't need sorting styling since it only has 4 columns (id, dvs, dvm, dvr)
+		// and id/dvs/dvm/dvr are not typically sortable
+	}
 
 	// Generate response HTML
 	ticEscaped := html.EscapeString(ticStr)
-	totalTCEs := len(spocRecords)
+	totalSpocTCEs := len(spocRecords)
+	totalTessSpocTCEs := len(tessSpocRecords)
+
+	// Build table HTML sections
+	var tablesSectionHTML string
+	if showBoth {
+		// Show both SPOC and TESS-SPOC results
+		if totalSpocTCEs > 0 {
+			tablesSectionHTML += fmt.Sprintf("<h2>SPOC (2-min cadence) - %d TCEs</h2>\n%s\n", totalSpocTCEs, spocContent)
+		}
+		if totalTessSpocTCEs > 0 {
+			tablesSectionHTML += fmt.Sprintf("<h2>TESS-SPOC (FFI) - %d TCEs</h2>\n<div id=\"tessSpocDupCtr\">\n  <span id=\"tessSpocDupMsg\"></span>\n  <button id=\"hideShowInSpocCtl\" onclick=\"document.body.classList.toggle('show_in_spoc');\"></button>\n</div>\n%s\n", totalTessSpocTCEs, tessSpocContent)
+		}
+	} else if pipeline == "spoc" {
+		// SPOC only
+		tablesSectionHTML = spocContent
+	} else {
+		// TESS-SPOC only
+		tablesSectionHTML = tessSpocContent
+	}
 
 	htmlContent := fmt.Sprintf(`<!DOCTYPE html>
 <html>
-    <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <link rel="icon" href="data:,">
-        <title>(%d) TCEs for TIC %s</title>
+	<head>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<link rel="icon" href="data:,">
+		<title>(%d) TCEs for TIC %s</title>
         %s
     </head>
     <body>
@@ -142,21 +196,51 @@ func handleTCES(w http.ResponseWriter, r *http.Request) {
                 const options = {valueNames: ['col0', 'col4', 'col5', 'col6', 'col7', 'col8', 'col9', 'col10', 'col11']};
                 const tceList = new List('result', options);
             }
+
+            // Hide/show TESS-SPOC duplicates of SPOC results
+            function addHideShowForTessSpocDupRows() {
+                // mark rows (that are "duplicates" of SPOC TCEs) with css class
+                const spocTceIds = Array.from(document.querySelectorAll('table#table_spoc tbody td:nth-of-type(1)')).map(td => td.textContent);
+                let numInSpoc = 0;
+                document.querySelectorAll('table#table_tess_spoc tbody tr').forEach(tr => {
+                    // TESS-SPOC id generation: SPOC id with '_f' suffix. strip the suffix for comparison
+                    const curId = tr.querySelector('td:nth-of-type(1)').textContent.replace('_f', '').replace('_ftce', '_tce');
+                    if (spocTceIds.includes(curId)) {
+                        tr.classList.add('in_spoc');
+                        numInSpoc++;
+                    }
+                });
+                if (numInSpoc > 0) {
+                    document.getElementById('tessSpocDupMsg').textContent = numInSpoc + ' TCEs have SPOC counterparts.';
+                } else {
+                    document.getElementById('tessSpocDupCtr').style.display = 'none';
+                }
+            }
+
+            if (document.querySelector('#table_tess_spoc')) {
+                addHideShowForTessSpocDupRows();
+            }
         </script>
     </body>
 </html>`,
-		totalTCEs,
+		totalSpocTCEs + totalTessSpocTCEs,
 		ticEscaped,
 		getStyleCSS(),
 		exoFOPBaseURL,
 		ticEscaped,
 		ticEscaped,
-		spocContent,
+		tablesSectionHTML,
 	)
 
 	w.WriteHeader(http.StatusOK)
 	fmt.Fprint(w, htmlContent)
-	log.Printf("Query for TIC %d: found %d SPOC TCEs", ticInt, len(spocRecords))
+	if showBoth {
+		log.Printf("Query for TIC %d: found %d SPOC TCEs, %d TESS-SPOC TCEs", ticInt, totalSpocTCEs, totalTessSpocTCEs)
+	} else if pipeline == "spoc" {
+		log.Printf("Query for TIC %d (SPOC): found %d TCEs", ticInt, totalSpocTCEs)
+	} else {
+		log.Printf("Query for TIC %d (TESS-SPOC): found %d TCEs", ticInt, totalTessSpocTCEs)
+	}
 }
 
 func renderHome() string {
@@ -179,27 +263,48 @@ func renderHome() string {
         }
         </style>
         <form>
-            TIC: <input name="tic" type="number" placeholder="TIC id, e.g., 261136679"></input>
-            <input type="Submit"></input>
+            <div>
+                TIC: <input name="tic" type="number" placeholder="TIC id, e.g., 261136679"></input>
+                <input type="Submit"></input>
+            </div>
+			<br>
+            <div>
+                Pipeline:
+                <select name="pipeline">
+                    <option value="">all</option>
+                    <option value="spoc">SPOC</option>
+                    <option value="tess_spoc">TESS-SPOC</option>
+                </select>
+            </div>
         </form>
         <footer style="margin-top: 5vh; font-size: 85%%;">
-            <p>SPOC (2 min cadence): based on data published by <a href="https://archive.stsci.edu/" target="_blank">MAST</a>:</p>
+            <p><strong>SPOC</strong> (2 min cadence): based on data published by <a href="https://archive.stsci.edu/" target="_blank">MAST</a>:</p>
             <ul>
                 <li><a href="https://archive.stsci.edu/tess/bulk_downloads/bulk_downloads_tce.html" target="_blank">TCE statistics bulk downloads</a> (<code>csv</code> files)</li>
                 <li><a href="https://archive.stsci.edu/tess/bulk_downloads/bulk_downloads_ffi-tp-lc-dv.html" target="_blank">TESS DV files bulk downloads</a> (<code>sh</code> files)</li>
             </ul>
-            Latest:
+            Latest SPOC:
             <ul>
                 <li>Single sector: %s</li>
                 <li>Multi sector: %s</li>
             </ul>
+
+            <p><strong>TESS-SPOC</strong> (FFI): based on data published by <a href="https://archive.stsci.edu/hlsp/tess-spoc" target="_blank">MAST HLSP TESS-SPOC</a>:</p>
+            Latest TESS-SPOC:
+            <ul>
+                <li>Single sector: %s</li>
+                <li>Multi sector: %s</li>
+            </ul>
+
             <br>
             <a href="https://github.com/orionlee/tess_dv_fast/" target="_blank">Sources / Issues</a><br>
         </footer>
     </body>
 </html>`,
-		spocWatermarks.SingleSector,
-		spocWatermarks.MultiSector,
+		spocWatermarks.SpocSingleSector,
+		spocWatermarks.SpocMultiSector,
+		spocWatermarks.TessSpocSingleSector,
+		spocWatermarks.TessSpocMultiSector,
 	)
 }
 
@@ -288,6 +393,37 @@ th.sort {
 .sort.desc::after {
     content: "\025BE";
     padding-left: 3px;
+}
+
+/* for hide show TESS-SPOC "duplicates" of SPOC */
+h2 {
+    font-size: 1.2rem;
+}
+
+#tessSpocDupCtr {
+    margin-bottom: 6px;
+    margin-left: 12px;
+    font-size: 80%;
+}
+
+tr.in_spoc {
+    display: none;
+}
+
+.show_in_spoc tr.in_spoc {
+    display: table-row;
+}
+
+#hideShowInSpocCtl {
+    font-size: 80%;
+}
+
+#hideShowInSpocCtl::before {
+    content: "Show";
+}
+
+.show_in_spoc #hideShowInSpocCtl::before {
+    content: "Hide";
 }
 </style>`
 }

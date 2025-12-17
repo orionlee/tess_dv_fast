@@ -109,6 +109,58 @@ func GetTCEInfosOfTIC(tic int64) ([]TCERecord, error) {
 	return records, nil
 }
 
+// GetTessSpocTCEInfosOfTIC retrieves TESS-SPOC TCE information for a given TIC ID
+// TESS-SPOC (FFI) does not have tcedepth, tceperiod, tce_time0bt, tce_duration, etc.
+// So we return records with minimal metadata
+func GetTessSpocTCEInfosOfTIC(tic int64) ([]TCERecord, error) {
+	dbPath := spec.DatabaseDir + "/" + spec.TessSpocDBName
+	// Use proper URI format for modernc.org/sqlite with encoded path
+	dsn := "file:" + url.QueryEscape(dbPath) + "?mode=ro"
+	db, err := sql.Open("sqlite", dsn)
+	if err != nil {
+		return nil, fmt.Errorf("failed to open database %s: %w", dbPath, err)
+	}
+	defer db.Close()
+
+	// TESS-SPOC table has: ticid, sectors, tce_plnt_num, and that's mostly it
+	// No TCE parameters like depth, period, etc.
+	rows, err := db.Query("SELECT ticid, sectors, tce_plnt_num FROM tess_spoc_tcestats WHERE ticid = ?", tic)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query database: %w", err)
+	}
+	defer rows.Close()
+
+	var records []TCERecord
+	for rows.Next() {
+		var r TCERecord
+		if err := rows.Scan(
+			&r.TICID,
+			&r.Sectors,
+			&r.TCEPlanetNum,
+		); err != nil {
+			return nil, fmt.Errorf("failed to scan row: %w", err)
+		}
+		// Generate IDs and product filenames for TESS-SPOC
+		r.ExoMastID = generateTessSpocID(r)
+		r.DVS = generateTessSpocDVS(r)
+		r.DVM = generateTessSpocDVM(r)
+		r.DVR = generateTessSpocDVR(r)
+		records = append(records, r)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating rows: %w", err)
+	}
+
+	// Sort results the same way as Python version:
+	// 1. by ticid (ascending)
+	// 2. by sectors_span (descending - multi-sector first)
+	// 3. by exomast_id (ascending)
+	sortTCERecords(records)
+
+	return records, nil
+}
+
 // GetSectorsSpan calculates the span of sectors for a multi-sector TCE
 func GetSectorsSpan(sectorsStr string) int {
 	re := regexp.MustCompile(`s(\d+)-s(\d+)`)
@@ -120,6 +172,31 @@ func GetSectorsSpan(sectorsStr string) int {
 	start, _ := strconv.Atoi(matches[1])
 	end, _ := strconv.Atoi(matches[2])
 	return end - start + 1
+}
+
+// generateTessSpocID creates a unique ID for TESS-SPOC TCEs
+// Format: TIC<ticid>s<start_sector>s<end_sector>TCE<plnt_num>_F
+func generateTessSpocID(r TCERecord) string {
+	return fmt.Sprintf("TIC%d%s_F", r.TICID, strings.ToUpper(strings.ReplaceAll(r.Sectors, "-", ""))) + fmt.Sprintf("TCE%d", r.TCEPlanetNum)
+}
+
+// generateTessSpocDVS generates the DVS filename for TESS-SPOC
+func generateTessSpocDVS(r TCERecord) string {
+	ticid := fmt.Sprintf("%016d", r.TICID)
+	plntNum := fmt.Sprintf("%02d", r.TCEPlanetNum)
+	return fmt.Sprintf("hlsp_tess-spoc_tess_phot_%s-%s_tess_v1_dvs-%s.pdf", ticid, r.Sectors, plntNum)
+}
+
+// generateTessSpocDVM generates the DVM filename for TESS-SPOC
+func generateTessSpocDVM(r TCERecord) string {
+	ticid := fmt.Sprintf("%016d", r.TICID)
+	return fmt.Sprintf("hlsp_tess-spoc_tess_phot_%s-%s_tess_v1_dvm.pdf", ticid, r.Sectors)
+}
+
+// generateTessSpocDVR generates the DVR filename for TESS-SPOC
+func generateTessSpocDVR(r TCERecord) string {
+	ticid := fmt.Sprintf("%016d", r.TICID)
+	return fmt.Sprintf("hlsp_tess-spoc_tess_phot_%s-%s_tess_v1_dvr.pdf", ticid, r.Sectors)
 }
 
 // sortTCERecords sorts TCE records in the same way as the Python version:
@@ -286,4 +363,34 @@ func RenderTCETable(records []TCERecord) string {
 
 	html.WriteString(`</tbody></table>`)
 	return common.AddHTMLColumnUnits(html.String())
+}
+
+// RenderTessSpocTCETable renders TESS-SPOC TCE records as an HTML table with minimal columns
+func RenderTessSpocTCETable(records []TCERecord) string {
+	if len(records) == 0 {
+		return "No TESS-SPOC TCE"
+	}
+
+	var html strings.Builder
+	html.WriteString(`<table id="table_tess_spoc"><thead><tr>`)
+	// CSS classes col0, col1, etc. are used for
+	// in-table search/filtering at client side using list.js
+	html.WriteString(`<th class="col_heading level0 col0">id</th>`)
+	html.WriteString(`<th class="col_heading level0 col1">dvs</th>`)
+	html.WriteString(`<th class="col_heading level0 col2">dvm</th>`)
+	html.WriteString(`<th class="col_heading level0 col3">dvr</th>`)
+	html.WriteString(`</tr></thead><tbody>`)
+
+	for _, record := range records {
+		display := FormatTCEForDisplay(record)
+		html.WriteString(`<tr>`)
+		html.WriteString(fmt.Sprintf(`<td class="col0">%s</td>`, display.ExoMastID))
+		html.WriteString(fmt.Sprintf(`<td class="col1">%s</td>`, display.DVS))
+		html.WriteString(fmt.Sprintf(`<td class="col2">%s</td>`, display.DVM))
+		html.WriteString(fmt.Sprintf(`<td class="col3">%s</td>`, display.DVR))
+		html.WriteString(`</tr>`)
+	}
+
+	html.WriteString(`</tbody></table>`)
+	return html.String()
 }
