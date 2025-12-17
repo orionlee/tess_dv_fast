@@ -100,6 +100,12 @@ func GetTCEInfosOfTIC(tic int64) ([]TCERecord, error) {
 		return nil, fmt.Errorf("error iterating rows: %w", err)
 	}
 
+	// Sort results the same way as Python version:
+	// 1. by ticid (ascending)
+	// 2. by sectors_span (descending - multi-sector first)
+	// 3. by exomast_id (ascending)
+	sortTCERecords(records)
+
 	return records, nil
 }
 
@@ -114,6 +120,47 @@ func GetSectorsSpan(sectorsStr string) int {
 	start, _ := strconv.Atoi(matches[1])
 	end, _ := strconv.Atoi(matches[2])
 	return end - start + 1
+}
+
+// sortTCERecords sorts TCE records in the same way as the Python version:
+// 1. by TICID (ascending)
+// 2. by SectorSpan (descending - multi-sector TCEs come first)
+// 3. by ExoMastID (ascending)
+func sortTCERecords(records []TCERecord) {
+	// Pre-calculate sector spans for sorting
+	spans := make([]int, len(records))
+	for i, r := range records {
+		spans[i] = GetSectorsSpan(r.Sectors)
+	}
+
+	// Sort using Go's built-in sort
+	for i := 0; i < len(records)-1; i++ {
+		for j := 0; j < len(records)-i-1; j++ {
+			// Compare TICID first (ascending)
+			if records[j].TICID != records[j+1].TICID {
+				if records[j].TICID > records[j+1].TICID {
+					records[j], records[j+1] = records[j+1], records[j]
+					spans[j], spans[j+1] = spans[j+1], spans[j]
+				}
+				continue
+			}
+
+			// Same TICID: compare SectorSpan (descending - larger first)
+			if spans[j] != spans[j+1] {
+				if spans[j] < spans[j+1] {
+					records[j], records[j+1] = records[j+1], records[j]
+					spans[j], spans[j+1] = spans[j+1], spans[j]
+				}
+				continue
+			}
+
+			// Same TICID and SectorSpan: compare ExoMastID (ascending)
+			if strings.ToLower(records[j].ExoMastID) > strings.ToLower(records[j+1].ExoMastID) {
+				records[j], records[j+1] = records[j+1], records[j]
+				spans[j], spans[j+1] = spans[j+1], spans[j]
+			}
+		}
+	}
 }
 
 // ToProductURL converts product filenames to MAST server URL
