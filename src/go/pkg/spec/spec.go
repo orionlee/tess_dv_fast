@@ -23,18 +23,19 @@ type HighWatermarks struct {
 	MultiSector  string `json:"multi_sector"`
 }
 
+// Go version doesn't really need the sources, relying on on the sqlite db created by Python version
+// We keep the latest one to support GetHighWatermarks() , however.
+
 // TCE stats CSV sources (single sector)
 var TCEStatsSingleSectorSources = []string{
-	"https://archive.stsci.edu/missions/tess/catalogs/tce/tess2018206190142-s0001-s0001_dvr-tcestats.csv",
-	"https://archive.stsci.edu/missions/tess/catalogs/tce/tess2018235142541-s0002-s0002_dvr-tcestats.csv",
-	"https://archive.stsci.edu/missions/tess/catalogs/tce/tess2018263124740-s0003-s0003_dvr-tcestats.csv",
-	// ... (truncated for brevity, would include all 88+ sectors)
+	// ... (truncated, only the latest one is here)
+	"https://archive.stsci.edu/missions/tess/catalogs/tce/tess2025258033922-s0097-s0097_dvr-tcestats.csv",
 }
 
 // TCE stats CSV sources (multi sector)
 var TCEStatsMultiSectorSources = []string{
-	"https://archive.stsci.edu/missions/tess/catalogs/tce/tess2024143004541-s0079-s0088_dvr-tcestats.csv",
-	// ... (truncated for brevity)
+	// ... (truncated, only the latest one is here)
+	"https://archive.stsci.edu/missions/tess/catalogs/tce/tess2018206190142-s0001-s0092_dvr-tcestats.csv",
 }
 
 // GetHighWatermarks extracts the latest sector information from sources
