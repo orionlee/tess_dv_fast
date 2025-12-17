@@ -46,7 +46,7 @@ type TCEDisplayInfo struct {
 	Period       float64
 	Epoch        float64
 	Duration     float64
-	Depth        float64
+	DepthPercent        float64
 	PlanetRadius float64
 	ImpactB      float64
 	SectorSpan   int
@@ -274,7 +274,7 @@ func FormatTCEForDisplay(record TCERecord) TCEDisplayInfo {
 		Period:       record.TCEPeriod,
 		Epoch:        record.TCETime0BT,
 		Duration:     record.TCEDuration,
-		Depth:        depthPct,
+		DepthPercent:        depthPct,
 		PlanetRadius: pRadiusJupiter,
 		ImpactB:      record.TCEImpact,
 		SectorSpan:   GetSectorsSpan(record.Sectors),
@@ -353,7 +353,7 @@ func RenderTCETable(records []TCERecord) string {
 		html.WriteString(fmt.Sprintf(`<td class="col5">%.2f</td>`, display.Epoch))
 		html.WriteString(fmt.Sprintf(`<td class="col6">%.4f</td>`, display.Duration))
 		html.WriteString(fmt.Sprintf(`<td class="col7">%.6f</td>`, display.Period))
-		html.WriteString(fmt.Sprintf(`<td class="col8">%.4f</td>`, display.Depth))
+		html.WriteString(fmt.Sprintf(`<td class="col8">%.4f</td>`, display.DepthPercent))
 		html.WriteString(fmt.Sprintf(`<td class="col9">%.2f</td>`, display.ImpactB))
 		html.WriteString(fmt.Sprintf(`<td class="col10">%s</td>`, display.TICOffset))
 		html.WriteString(fmt.Sprintf(`<td class="col11">%s</td>`, display.OotOffset))
