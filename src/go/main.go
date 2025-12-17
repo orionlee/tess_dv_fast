@@ -123,21 +123,14 @@ func handleTCES(w http.ResponseWriter, r *http.Request) {
 			// Log but continue - may only have SPOC data
 			log.Printf("TESS-SPOC query failed for TIC %d: %v", ticInt, err)
 		}
-		// If both queries failed, report error
-		if len(spocRecords) == 0 && len(tessSpocRecords) == 0 {
-			renderError(w, "No TCE data found for this TIC ID.", http.StatusNotFound)
-			return
-		}
 	}
 
 	// Render content
 	var spocContent string
 	var tessSpocContent string
 
-	if len(spocRecords) > 0 {
-		spocContent = query.RenderTCETable(spocRecords)
-		spocContent = applyTableStyling(spocContent, "table_spoc", spoc_sortable_columns_idx)
-	}
+	spocContent = query.RenderTCETable(spocRecords)
+	spocContent = applyTableStyling(spocContent, "table_spoc", spoc_sortable_columns_idx)
 
 	if len(tessSpocRecords) > 0 {
 		tessSpocContent = query.RenderTessSpocTCETable(tessSpocRecords)
@@ -154,9 +147,7 @@ func handleTCES(w http.ResponseWriter, r *http.Request) {
 	var tablesSectionHTML string
 	if showBoth {
 		// Show both SPOC and TESS-SPOC results
-		if totalSpocTCEs > 0 {
-			tablesSectionHTML += fmt.Sprintf("<h2>SPOC (2-min cadence) - %d TCEs</h2>\n%s\n", totalSpocTCEs, spocContent)
-		}
+		tablesSectionHTML += fmt.Sprintf("<h2>SPOC (2-min cadence) - %d TCEs</h2>\n%s\n", totalSpocTCEs, spocContent)
 		if totalTessSpocTCEs > 0 {
 			tablesSectionHTML += fmt.Sprintf("<h2>TESS-SPOC (FFI) - %d TCEs</h2>\n<div id=\"tessSpocDupCtr\">\n  <span id=\"tessSpocDupMsg\"></span>\n  <button id=\"hideShowInSpocCtl\" onclick=\"document.body.classList.toggle('show_in_spoc');\"></button>\n</div>\n%s\n", totalTessSpocTCEs, tessSpocContent)
 		}
