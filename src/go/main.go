@@ -20,7 +20,13 @@ const (
 	buildDate     = "unknown"
 	buildCommit   = "unknown"
 	defaultPort   = "8080"
+	spoc_table_id = "table_spoc"
 )
+
+// Sortable columns: col0 (exomast_id), col4-col11 (numeric columns), but NOT col1-col3 (product links) or col12 (codes)
+// - note: needs to be in sync with the javascript codes (List object) created
+//   in handleTCES()
+var spoc_sortable_columns_idx = []int{0, 4, 5, 6, 7, 8, 9, 10, 11}
 
 func init() {
 	// Initialize database directory from environment variable or executable location
@@ -102,7 +108,7 @@ func handleTCES(w http.ResponseWriter, r *http.Request) {
 
 	// Render content
 	spocContent := query.RenderTCETable(spocRecords)
-	spocContent = applyTableStyling(spocContent, "table_spoc", []int{0, 4, 5, 6, 7, 8, 9, 10, 11})
+	spocContent = applyTableStyling(spocContent, spoc_table_id, spoc_sortable_columns_idx)
 
 	// Generate response HTML
 	ticEscaped := html.EscapeString(ticStr)
@@ -132,6 +138,7 @@ func handleTCES(w http.ResponseWriter, r *http.Request) {
         <script src="https://cdn.jsdelivr.net/gh/javve/list.js@2.3.1/dist/list.min.js"></script>
         <script>
             if (document.querySelector('#result table')) {
+			    // valueNames should be in sync with spoc_sortable_columns at sever side
                 const options = {valueNames: ['col0', 'col4', 'col5', 'col6', 'col7', 'col8', 'col9', 'col10', 'col11']};
                 const tceList = new List('result', options);
             }
@@ -290,13 +297,23 @@ func applyTableStyling(content string, tableID string, sortableCols []int) strin
 	re := regexp.MustCompile(`<table id="[^"]+"`)
 	content = re.ReplaceAllString(content, fmt.Sprintf(`<table id="%s"`, tableID))
 
-	// Apply sortable styling
 	if len(sortableCols) > 0 {
+		// make table searchable / sortable by https://github.com/javve/list.js
 		content = strings.Replace(content, "<tbody", `<tbody class="list"`, 1)
-		for _, i := range sortableCols {
-			oldClass := fmt.Sprintf(`class="col_heading level0 col%d"`, i)
-			newClass := fmt.Sprintf(`class="col_heading level0 col%d sort" data-sort="col%d"`, i, i)
-			content = strings.Replace(content, oldClass, newClass, 1)
+
+		// Create a map for quick lookup of sortable columns
+		sortableMap := make(map[int]bool)
+		for _, col := range sortableCols {
+			sortableMap[col] = true
+		}
+
+		// Replace ALL header occurrences for sortable columns
+		for col := 0; col <= 12; col++ {
+			if sortableMap[col] {
+				oldClass := fmt.Sprintf(`<th class="col_heading level0 col%d">`, col)
+				newClass := fmt.Sprintf(`<th class="col_heading level0 col%d sort" data-sort="col%d">`, col, col)
+				content = strings.ReplaceAll(content, oldClass, newClass)
+			}
 		}
 	}
 
