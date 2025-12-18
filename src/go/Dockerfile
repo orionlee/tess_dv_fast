@@ -16,7 +16,8 @@ WORKDIR /app
 COPY --from=build /app/tess_dv_fast_server .
 # the sqlite db files directory
 COPY data data
-
+# build SHA
+COPY build.txt build.txt
 
 # starting the main process
 CMD ["./tess_dv_fast_server"]
