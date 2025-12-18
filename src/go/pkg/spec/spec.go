@@ -87,8 +87,8 @@ func GetHighWatermarks() *HighWatermarks {
 
 	if len(TessSpocMultiSectorSources) > 0 {
 		re := regexp.MustCompile(`(s\d+-s\d+)_tess_v1_dl-dv`)
-		if matches := re.FindStringSubmatch(TessSpocSingleSectorSources[len(TessSpocSingleSectorSources)-1]); len(matches) > 1 {
-			hw.TessSpocSingleSector = matches[1]
+		if matches := re.FindStringSubmatch(TessSpocMultiSectorSources[len(TessSpocMultiSectorSources)-1]); len(matches) > 1 {
+			hw.TessSpocMultiSector = matches[1]
 		}
 	}
 	return hw
