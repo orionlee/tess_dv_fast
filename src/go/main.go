@@ -29,12 +29,15 @@ const (
 var spoc_sortable_columns_idx = []int{0, 4, 5, 6, 7, 8, 9, 10, 11}
 
 // BEGIN read build commit SHA
+// - cannot use Go's built-in runtime/debug.ReadBuildInfo(), because
+//   in Google Cloud Run source deployment scenario, the binary is built
+//   outside of a git repository.
 var (
 	// Cached SHA
 	// This variable holds the string value after it is loaded.
 	cachedSHA = ""
 
-	// once ensures that the loadFirstLine function is executed only once.
+	// once ensures that the loadSHAFromFile function is executed only once.
 	once sync.Once
 )
 
@@ -70,13 +73,7 @@ func loadSHAFromFile() {
 
 // getBuildSHA provides the cached first line of the file.
 func getBuildSHA() string {
-	// Call Do with the function to execute.
-	// The function passed to Do takes no arguments.
-	// We use a closure to pass filePath to loadFirstLine.
-	once.Do(func() {
-		loadSHAFromFile()
-	})
-
+	once.Do(loadSHAFromFile)  // do it once to load it into cache
 	return cachedSHA
 }
 
