@@ -108,6 +108,8 @@ curl 'http://localhost:8080/tces?tic=261136679' # Search a TIC
 # copy the SQLite db files, so they can be included in the deployment
 mkdir -p data/tess_dv_fast
 cp ../../data/tess_dv_fast/*.db ./data/tess_dv_fast/
+# include build commit SHA
+echo `git rev-parse HEAD` > build.txt
 gcloud run deploy <service-name> --source .
 ```
 

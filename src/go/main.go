@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"html"
 	"log"
@@ -10,6 +11,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/orionlee/tess_dv_fast/pkg/query"
 	"github.com/orionlee/tess_dv_fast/pkg/spec"
@@ -17,8 +19,6 @@ import (
 
 const (
 	exoFOPBaseURL = "https://exofop.ipac.caltech.edu/tess/target.php"
-	buildDate     = "unknown"
-	buildCommit   = "unknown"
 	defaultPort   = "8080"
 	spoc_table_id = "table_spoc"
 )
@@ -27,6 +27,64 @@ const (
 //   - note: needs to be in sync with the javascript codes (List object) created
 //     in handleTCES()
 var spoc_sortable_columns_idx = []int{0, 4, 5, 6, 7, 8, 9, 10, 11}
+
+// BEGIN read build commit SHA
+var (
+	// Cached SHA
+	// This variable holds the string value after it is loaded.
+	cachedSHA = ""
+
+	// once ensures that the loadFirstLine function is executed only once.
+	once sync.Once
+)
+
+func loadSHAFromFile() {
+	// The code inside this function is intended to run once only.
+	filePath := "build.txt"  // TODO:
+	file, err := os.Open(filePath)
+	if err != nil {
+		log.Printf("Failed to open file: %s, err: %v", filePath, err)
+		// Handle the error as appropriate for your application.
+		// Since we cannot return an error from an init function, we log it.
+		return
+	}
+	defer file.Close() // Ensure the file is closed after reading.
+
+	scanner := bufio.NewScanner(file)
+	if scanner.Scan() { // Read the first line.
+		cachedSHA = scanner.Text() // Get the line as a string.
+	}
+
+	if err := scanner.Err(); err != nil {
+		log.Printf("Error during file scanning: %v", err)
+	}
+}
+
+// getBuildSHA provides the cached first line of the file.
+func getBuildSHA() string {
+	// Call Do with the function to execute.
+	// The function passed to Do takes no arguments.
+	// We use a closure to pass filePath to loadFirstLine.
+	once.Do(func() {
+		loadSHAFromFile()
+	})
+
+	return cachedSHA
+}
+
+func getBuildSHAShort() string {
+	sha := getBuildSHA()
+
+	// Convert the string to a slice of runes (for getting a subset)
+	runes := []rune(sha)
+
+	if 8 >= len(runes) {
+		return sha
+	}
+	return string(runes[:8])
+}
+
+// END read build commit SHA
 
 func init() {
 	// Initialize database directory from environment variable or executable location
@@ -289,6 +347,9 @@ func renderHome() string {
 
             <br>
             <a href="https://github.com/orionlee/tess_dv_fast/" target="_blank">Sources / Issues</a><br>
+            Build:
+            <a target="_blank" href="https://github.com/orionlee/tess_dv_fast/commit/%s"
+                >%s</a><br>
         </footer>
     </body>
 </html>`,
@@ -296,6 +357,8 @@ func renderHome() string {
 		spocWatermarks.SpocMultiSector,
 		spocWatermarks.TessSpocSingleSector,
 		spocWatermarks.TessSpocMultiSector,
+		getBuildSHA(),
+		getBuildSHAShort(),
 	)
 }
 
