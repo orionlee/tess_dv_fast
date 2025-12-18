@@ -40,10 +40,18 @@ var (
 
 func loadSHAFromFile() {
 	// The code inside this function is intended to run once only.
-	filePath := "build.txt"  // TODO:
-	file, err := os.Open(filePath)
+	// store the SHA in the global cachedSHA
+
+	exePath, err := os.Executable()
 	if err != nil {
-		log.Printf("Failed to open file: %s, err: %v", filePath, err)
+		log.Printf("Failed to locate build.txt for build SHA. err: %v", err)
+		return
+	}
+	exeBaseDir := filepath.Dir(exePath)
+	shaFilePath := exeBaseDir + "/" + "build.txt"
+	file, err := os.Open(shaFilePath)
+	if err != nil {
+		log.Printf("Failed to open file: %s, err: %v", shaFilePath, err)
 		// Handle the error as appropriate for your application.
 		// Since we cannot return an error from an init function, we log it.
 		return
