@@ -317,6 +317,7 @@ func renderHome() string {
                 <input type="Submit"></input>
             </div>
 			<br>
+<!-- Hide the optional pipeline form input for now.
             <div>
                 Pipeline:
                 <select name="pipeline">
@@ -325,6 +326,7 @@ func renderHome() string {
                     <option value="tess_spoc">TESS-SPOC</option>
                 </select>
             </div>
+-->
         </form>
         <footer style="margin-top: 5vh; font-size: 85%%;">
             <p><strong>SPOC</strong> (2 min cadence): based on data published by <a href="https://archive.stsci.edu/" target="_blank">MAST</a>:</p>
