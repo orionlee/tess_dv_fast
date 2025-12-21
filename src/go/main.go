@@ -192,7 +192,7 @@ func handleTCES(w http.ResponseWriter, r *http.Request) {
 	var spocContent string
 	var tessSpocContent string
 
-	spocContent = query.RenderTCETable(spocRecords)
+	spocContent = query.RenderSpocTCETable(spocRecords)
 	spocContent = applyTableStyling(spocContent, "table_spoc", spoc_sortable_columns_idx)
 
 	if len(tessSpocRecords) > 0 {

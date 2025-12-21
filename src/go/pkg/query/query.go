@@ -34,8 +34,8 @@ type TCERecord struct {
 	TCEDiccoMskyErr float64
 }
 
-// TCEDisplayInfo represents formatted TCE info for display
-type TCEDisplayInfo struct {
+// SpocTCEDisplayInfo represents formatted TCE info for display
+type SpocTCEDisplayInfo struct {
 	ExoMastID    string
 	DVS          string
 	DVM          string
@@ -49,6 +49,14 @@ type TCEDisplayInfo struct {
 	DepthPercent        float64
 	PlanetRadius float64
 	ImpactB      float64
+	SectorSpan   int
+}
+
+type TessSpocTCEDisplayInfo struct {
+	ID           string
+	DVS          string
+	DVM          string
+	DVR          string
 	SectorSpan   int
 }
 
@@ -175,9 +183,10 @@ func GetSectorsSpan(sectorsStr string) int {
 }
 
 // generateTessSpocID creates a unique ID for TESS-SPOC TCEs
-// Format: TIC<ticid>s<start_sector>s<end_sector>TCE<plnt_num>_F
+// Format: TIC<ticid>S<start_sector>S<end_sector>TCE<plnt_num>_f
+//         essentially exomast_id with a "_f" suffix (to signify it is from TESS-SPOC)
 func generateTessSpocID(r TCERecord) string {
-	return fmt.Sprintf("TIC%d%s_F", r.TICID, strings.ToUpper(strings.ReplaceAll(r.Sectors, "-", ""))) + fmt.Sprintf("TCE%d", r.TCEPlanetNum)
+	return fmt.Sprintf("TIC%d%s", r.TICID, strings.ToUpper(strings.ReplaceAll(r.Sectors, "-", ""))) + fmt.Sprintf("TCE%d", r.TCEPlanetNum) + "_f"
 }
 
 // generateTessSpocDVS generates the DVS filename for TESS-SPOC
@@ -240,13 +249,49 @@ func sortTCERecords(records []TCERecord) {
 	}
 }
 
-// ToProductURL converts product filenames to MAST server URL
-func ToProductURL(filename string) string {
+// ToSpocProductURL converts product filenames to MAST server URL
+func ToSpocProductURL(filename string) string {
 	return fmt.Sprintf("https://mast.stsci.edu/api/v0.1/Download/file/?uri=mast:TESS/product/%s", filename)
 }
 
-// FormatTCEForDisplay converts a TCE record to display format with HTML formatting
-func FormatTCEForDisplay(record TCERecord) TCEDisplayInfo {
+// ToTessSpocProductURL converts TESS-SPOC product filenames to MAST server URL
+// e.g., hlsp_tess-spoc_tess_phot_0000000033979459-s0056-s0069_tess_v1_dvs-01.pdf
+//
+//	hlsp_tess-spoc_tess_phot_0000000033979459-s0056-s0069_tess_v1_dvm.pdf
+func ToTessSpocProductURL(filename string) string {
+	re := regexp.MustCompile(`hlsp_tess-spoc_tess_phot_0+?([1-9]\d+)-(s\d{4}-s\d{4})`)
+	matches := re.FindStringSubmatch(filename)
+	if len(matches) < 3 {
+		return ""
+	}
+
+	ticid := matches[1]
+	sectors := matches[2]
+
+	// Split sector_start and sector_end
+	sectorParts := strings.Split(sectors, "-")
+	sectorStart := sectorParts[0]
+	sectorEnd := sectorParts[1]
+
+	// Use single sector if both are the same
+	if sectorStart == sectorEnd {
+		sectors = sectorStart
+	}
+
+	// Pad ticid to 16 digits
+	ticidPadded := fmt.Sprintf("%016s", ticid)
+
+	// Split the ticid into 4 parts for the subdirectory pattern
+	t1 := ticidPadded[0:4]
+	t2 := ticidPadded[4:8]
+	t3 := ticidPadded[8:12]
+	t4 := ticidPadded[12:16]
+
+	return fmt.Sprintf("https://mast.stsci.edu/api/v0.1/Download/file/?uri=mast:HLSP/tess-spoc/%s/target/%s/%s/%s/%s/%s", sectors, t1, t2, t3, t4, filename)
+}
+
+// FormatSpocTCEForDisplay converts a SPOC TCE record to display format with HTML formatting
+func FormatSpocTCEForDisplay(record TCERecord) SpocTCEDisplayInfo {
 	pRadiusJupiter := record.TCEPRad * common.REarthToRJupiter
 	depthPct := record.TCEDepth / 10000.0
 	ditcoSig := 0.0
@@ -259,11 +304,11 @@ func FormatTCEForDisplay(record TCERecord) TCEDisplayInfo {
 	}
 
 	// Format DVS, DVM, DVR as links to MAST products
-	dvsLink := formatProductLink(record.DVS)
-	dvmLink := formatProductLink(record.DVM)
-	dvrLink := formatProductLink(record.DVR)
+	dvsLink := formatSpocProductLink(record.DVS)
+	dvmLink := formatSpocProductLink(record.DVM)
+	dvrLink := formatSpocProductLink(record.DVR)
 
-	return TCEDisplayInfo{
+	return SpocTCEDisplayInfo{
 		ExoMastID:    common.FormatExoMastID(record.ExoMastID),
 		DVS:          dvsLink,
 		DVM:          dvmLink,
@@ -281,6 +326,27 @@ func FormatTCEForDisplay(record TCERecord) TCEDisplayInfo {
 	}
 }
 
+// FormatTessSpocTCEForDisplay converts a SPOC TCE record to display format with HTML formatting
+func FormatTessSpocTCEForDisplay(record TCERecord) TessSpocTCEDisplayInfo {
+	// Format DVS, DVM, DVR as links to MAST products
+		dvsLink := formatTessSpocProductLink(record.DVS)
+	dvmLink := formatTessSpocProductLink(record.DVM)
+	dvrLink := formatTessSpocProductLink(record.DVR)
+
+	re := regexp.MustCompile(`TIC\d+`)
+	idAbbrev := strings.ToLower(re.ReplaceAllString(
+		record.ExoMastID, // TODO: rename record.ExoMastID.  or have a separate TessSpocTCERecord
+		""))
+
+	return TessSpocTCEDisplayInfo{
+		ID:          idAbbrev,
+		DVS:          dvsLink,
+		DVM:          dvmLink,
+		DVR:          dvrLink,
+		SectorSpan:   GetSectorsSpan(record.Sectors),
+	}
+}
+
 // generateCodes creates the observing codes string
 func generateCodes(record TCERecord) string {
 	exoIDShort := strings.ToLower(regexp.MustCompile(`TIC\d+`).ReplaceAllString(record.ExoMastID, ""))
@@ -294,8 +360,8 @@ func generateCodes(record TCERecord) string {
 	)
 }
 
-// formatProductLink formats a product filename as a clickable link to MAST
-func formatProductLink(filename string) string {
+// formatSpocProductLink formats a product filename as a clickable link to MAST
+func formatSpocProductLink(filename string) string {
 	if filename == "" {
 		return ""
 	}
@@ -309,7 +375,30 @@ func formatProductLink(filename string) string {
 			linkText = suffix[:idx2]
 		}
 	}
-	return fmt.Sprintf(`<a target="_blank" href="%s">%s</a>`, ToProductURL(filename), linkText)
+	return fmt.Sprintf(`<a target="_blank" href="%s">%s</a>`, ToSpocProductURL(filename), linkText)
+}
+
+
+// formatProductLink formats a product filename as a clickable link to MAST
+func formatTessSpocProductLink(filename string) string {
+	if filename == "" {
+		return ""
+	}
+	// Extract the product type (dvs, dvm, or dvr) from filename
+	// e.g., "tess...._dvs-01.pdf" -> "dvs", "tess...._dvm.pdf" -> "dvm"
+	linkText := filename
+	if idx := strings.LastIndex(filename, "_"); idx != -1 {
+		// Get the part after the last underscore and before the extension
+		suffix := filename[idx+1:]
+		if idx2 := strings.Index(suffix, "."); idx2 != -1 {
+			linkText = suffix[:idx2]
+		}
+		// to furhter map "dvs-01" to "dvs"
+		if idx3 := strings.Index(linkText, "-"); idx3 != -1 {
+			linkText = linkText[:idx3]
+		}
+	}
+	return fmt.Sprintf(`<a target="_blank" href="%s">%s</a>`, ToTessSpocProductURL(filename), linkText)
 }
 
 // formatCodesAsInput wraps the codes string in an HTML input element for easy copying
@@ -317,8 +406,8 @@ func formatCodesAsInput(codes string) string {
 	return fmt.Sprintf(`<input type="text" value='%s' readonly style="margin-left: 3ch; font-size: 90%%; color: #666; width: 10ch;" onclick="this.select();">`, codes)
 }
 
-// RenderTCETable renders TCE records as an HTML table
-func RenderTCETable(records []TCERecord) string {
+// RenderSpocTCETable renders TCE records as an HTML table
+func RenderSpocTCETable(records []TCERecord) string {
 	if len(records) == 0 {
 		return "No SPOC TCE"
 	}
@@ -343,7 +432,7 @@ func RenderTCETable(records []TCERecord) string {
 	html.WriteString(`</tr></thead><tbody>`)
 
 	for _, record := range records {
-		display := FormatTCEForDisplay(record)
+		display := FormatSpocTCEForDisplay(record)
 		html.WriteString(`<tr>`)
 		html.WriteString(fmt.Sprintf(`<td class="col0">%s</td>`, display.ExoMastID))
 		html.WriteString(fmt.Sprintf(`<td class="col1">%s</td>`, display.DVS))
@@ -382,9 +471,9 @@ func RenderTessSpocTCETable(records []TCERecord) string {
 	html.WriteString(`</tr></thead><tbody>`)
 
 	for _, record := range records {
-		display := FormatTCEForDisplay(record)
+		display := FormatTessSpocTCEForDisplay(record)
 		html.WriteString(`<tr>`)
-		html.WriteString(fmt.Sprintf(`<td class="col0">%s</td>`, display.ExoMastID))
+		html.WriteString(fmt.Sprintf(`<td class="col0">%s</td>`, display.ID))
 		html.WriteString(fmt.Sprintf(`<td class="col1">%s</td>`, display.DVS))
 		html.WriteString(fmt.Sprintf(`<td class="col2">%s</td>`, display.DVM))
 		html.WriteString(fmt.Sprintf(`<td class="col3">%s</td>`, display.DVR))
