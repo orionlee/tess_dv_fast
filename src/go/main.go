@@ -245,12 +245,6 @@ func handleTCES(w http.ResponseWriter, r *http.Request) {
 
         <script src="https://cdn.jsdelivr.net/gh/javve/list.js@2.3.1/dist/list.min.js"></script>
         <script>
-            if (document.querySelector('#result table')) {
-			    // valueNames should be in sync with spoc_sortable_columns at sever side
-                const options = {valueNames: ['col0', 'col4', 'col5', 'col6', 'col7', 'col8', 'col9', 'col10', 'col11']};
-                const tceList = new List('result', options);
-            }
-
             // Hide/show TESS-SPOC duplicates of SPOC results
             function addHideShowForTessSpocDupRows() {
                 // mark rows (that are "duplicates" of SPOC TCEs) with css class
@@ -273,6 +267,14 @@ func handleTCES(w http.ResponseWriter, r *http.Request) {
 
             if (document.querySelector('#table_tess_spoc')) {
                 addHideShowForTessSpocDupRows();
+            }
+
+
+			// Init in-table sort/filter with list.js for SPOC results (if exists)
+			if (document.querySelector('#result table#table_spoc')) {
+			    // valueNames should be in sync with spoc_sortable_columns at server side
+                const options = {valueNames: ['col0', 'col4', 'col5', 'col6', 'col7', 'col8', 'col9', 'col10', 'col11']};
+                const tceList = new List('result', options);
             }
         </script>
     </body>
