@@ -207,6 +207,9 @@ _MIN_DB_COLS = [
     # to generate dvs, dvm, dvr columns
     "tce_plnt_num",
     "sectors",
+    # sellar radius provenance, used to determine if tce_depth is reliable,
+    # by checking if the stellar radius is assumed to be solar or not
+    "tce_sradius_prov",
 ]
 
 
@@ -224,6 +227,11 @@ def _export_tcestats_as_db(minimal_db=False):
     df = _read_tcestats_csv(
         usecols=usecols,
     )
+
+    # create a column to flag if the stellar radius is assumed to be solar or not
+    df["tce_sradius_prov_is_solar"] = (df["tce_sradius_prov"] == "Solar")
+    if minimal_db:
+        df.drop(columns=["tce_sradius_prov"], inplace=True)
 
     if minimal_db:
         # replace dvs / dvm  / dvr columns with a much more compact representation

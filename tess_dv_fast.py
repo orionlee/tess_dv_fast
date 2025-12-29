@@ -34,7 +34,8 @@ def read_tcestats_csv(**kwargs) -> pd.DataFrame:
 def _query_tcestats_from_db(sql: str, **kwargs) -> pd.DataFrame:
     db_uri = f"file:{DATA_BASE_DIR}/{TCESTATS_DBNAME}?mode=ro"  # read-only
     with sqlite3.connect(db_uri, uri=True) as con:
-        return pd.read_sql(sql, con, **kwargs)
+        # convert the 0/1 value in column `tce_sradius_prov_is_solar` to bool
+        return pd.read_sql(sql, con, dtype={"tce_sradius_prov_is_solar": bool}, **kwargs)
 
 
 def _get_tcestats_of_tic_from_db(tic: Union[int, float, str, tuple, list]) -> pd.DataFrame:
@@ -118,6 +119,16 @@ def to_product_url(filename: str) -> str:
     return f"https://mast.stsci.edu/api/v0.1/Download/file/?uri=mast:TESS/product/{filename}"
 
 
+def _format_Rp(val_str):
+    # val_str is concatenated in the form of <Rp>|<sradius_is_solar>
+    pradius, sradius_is_solar = val_str.split("|")
+    pradius = f"{float(pradius):.4f}"
+    if sradius_is_solar == "True":
+        return f'<span style="color: red; font-weight: bold;">{pradius}<span>'
+    else:
+        return pradius
+
+
 def display_tce_infos(
     df: pd.DataFrame,
     return_as: Optional[str] = None,
@@ -144,6 +155,8 @@ def display_tce_infos(
 
     df["TicOffset"] = df["tce_ditco_msky"].astype(str) + "|" + df["tce_ditco_msky_sig"].astype(str)
     df["OotOffset"] = df["tce_dicco_msky"].astype(str) + "|" + df["tce_dicco_msky_sig"].astype(str)
+
+    df["Rp"] = df["Rp"].astype(str) + "|" + df["tce_sradius_prov_is_solar"].astype(str)
 
     display_columns = [
         "exomast_id",
@@ -178,7 +191,7 @@ def display_tce_infos(
         "dvs": _format_product_link,
         "dvm": _format_product_link,
         "dvr": _format_product_link,
-        "Rp": "{:.3f}",
+        "Rp": _format_Rp,
         "Epoch": "{:.2f}",  # the csv has 2 digits precision
         "Duration": "{:.4f}",
         "Period": "{:.6f}",
