@@ -28,6 +28,7 @@ type TCERecord struct {
 	TCEDuration     float64
 	TCEPRad         float64
 	TCEImpact       float64
+	TCESRadiusProvIsSolar bool
 	TCEDitcoMsky    float64
 	TCEDitcoMskyErr float64
 	TCEDiccoMsky    float64
@@ -47,7 +48,7 @@ type SpocTCEDisplayInfo struct {
 	Epoch        float64
 	Duration     float64
 	DepthPercent        float64
-	PlanetRadius float64
+	PlanetRadius string  // HTML-formatted string, to highlight entries of which the radius is not reliable
 	ImpactB      float64
 	SectorSpan   int
 }
@@ -71,7 +72,7 @@ func GetTCEInfosOfTIC(tic int64) ([]TCERecord, error) {
 	}
 	defer db.Close()
 
-	rows, err := db.Query("SELECT ticid, exomast_id, sectors, tce_plnt_num, dvs, dvm, dvr, tce_depth, tce_period, tce_time0bt, tce_duration, tce_prad, tce_impact, tce_ditco_msky, tce_ditco_msky_err, tce_dicco_msky, tce_dicco_msky_err FROM tess_tcestats WHERE ticid = ?", tic)
+	rows, err := db.Query("SELECT ticid, exomast_id, sectors, tce_plnt_num, dvs, dvm, dvr, tce_depth, tce_period, tce_time0bt, tce_duration, tce_prad, tce_impact, tce_sradius_prov_is_solar, tce_ditco_msky, tce_ditco_msky_err, tce_dicco_msky, tce_dicco_msky_err FROM tess_tcestats WHERE ticid = ?", tic)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query database: %w", err)
 	}
@@ -94,6 +95,7 @@ func GetTCEInfosOfTIC(tic int64) ([]TCERecord, error) {
 			&r.TCEDuration,
 			&r.TCEPRad,
 			&r.TCEImpact,
+			&r.TCESRadiusProvIsSolar,
 			&r.TCEDitcoMsky,
 			&r.TCEDitcoMskyErr,
 			&r.TCEDiccoMsky,
@@ -290,6 +292,14 @@ func ToTessSpocProductURL(filename string) string {
 	return fmt.Sprintf("https://mast.stsci.edu/api/v0.1/Download/file/?uri=mast:HLSP/tess-spoc/%s/target/%s/%s/%s/%s/%s", sectors, t1, t2, t3, t4, filename)
 }
 
+func formatPlanetRadius(pRadius float64, isSRadiusSolar bool) string {
+	style := ""
+	if isSRadiusSolar {
+		style = ` style="color: red; font-weight: bold;"`
+	}
+	return fmt.Sprintf("<span%s>%.3f</span>", style, pRadius)
+}
+
 // FormatSpocTCEForDisplay converts a SPOC TCE record to display format with HTML formatting
 func FormatSpocTCEForDisplay(record TCERecord) SpocTCEDisplayInfo {
 	pRadiusJupiter := record.TCEPRad * common.REarthToRJupiter
@@ -320,7 +330,7 @@ func FormatSpocTCEForDisplay(record TCERecord) SpocTCEDisplayInfo {
 		Epoch:        record.TCETime0BT,
 		Duration:     record.TCEDuration,
 		DepthPercent:        depthPct,
-		PlanetRadius: pRadiusJupiter,
+		PlanetRadius: formatPlanetRadius(pRadiusJupiter, record.TCESRadiusProvIsSolar),
 		ImpactB:      record.TCEImpact,
 		SectorSpan:   GetSectorsSpan(record.Sectors),
 	}
@@ -438,7 +448,7 @@ func RenderSpocTCETable(records []TCERecord) string {
 		html.WriteString(fmt.Sprintf(`<td class="col1">%s</td>`, display.DVS))
 		html.WriteString(fmt.Sprintf(`<td class="col2">%s</td>`, display.DVM))
 		html.WriteString(fmt.Sprintf(`<td class="col3">%s</td>`, display.DVR))
-		html.WriteString(fmt.Sprintf(`<td class="col4">%.3f</td>`, display.PlanetRadius))
+		html.WriteString(fmt.Sprintf(`<td class="col4">%s</td>`, display.PlanetRadius))
 		html.WriteString(fmt.Sprintf(`<td class="col5">%.2f</td>`, display.Epoch))
 		html.WriteString(fmt.Sprintf(`<td class="col6">%.4f</td>`, display.Duration))
 		html.WriteString(fmt.Sprintf(`<td class="col7">%.6f</td>`, display.Period))
