@@ -13,6 +13,7 @@ import re
 import sqlite3
 from typing import Callable, Optional, Union
 
+import numpy as np
 import pandas as pd
 
 from tess_dv_fast_common import ARRAY_LIKE_TYPES
@@ -26,14 +27,18 @@ from tess_spoc_dv_fast_spec import (
 def _query_tcestats_from_db(sql: str, **kwargs) -> pd.DataFrame:
     db_uri = f"file:{DATA_BASE_DIR}/{TCESTATS_DBNAME}?mode=ro"  # read-only
     with sqlite3.connect(db_uri, uri=True) as con:
-        return pd.read_sql(sql, con, **kwargs)
+        df = pd.read_sql(sql, con, **kwargs)
+        # to avoid "PerformanceWarning: DataFrame is highly fragmented."
+        # in subsequent codes such as _add_helpful_columns_to_tcestats()
+        df = df.copy()
+        return df
 
 
 def _get_tcestats_of_tic_from_db(tic: Union[int, float, str, tuple, list]) -> pd.DataFrame:
-    if isinstance(tic, (int, float, str)):
+    if isinstance(tic, (int, float, str)) or np.isscalar(tic):
         return _query_tcestats_from_db(
             "select * from tess_spoc_tcestats where ticid = ?",
-            params=[tic],
+            params=[int(tic)],
         )
     elif isinstance(tic, ARRAY_LIKE_TYPES):
         #
@@ -165,7 +170,7 @@ def display_tce_infos(
         display_columns = ["ticid"] + display_columns
 
     def format_id(id):
-        # for TESS-SPOC, it is not available on ExoMAST, so we simply return a abbrevated ID
+        # for TESS-SPOC, it is not available on ExoMAST, so we simply return a abbreviated ID
         short_name = re.sub(r"TIC\d+", "", id).lower()
         return short_name
 

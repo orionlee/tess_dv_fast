@@ -8,6 +8,7 @@ import re
 import sqlite3
 from typing import Callable, Optional, Union
 
+import numpy as np
 import pandas as pd
 
 from tess_dv_fast_common import (
@@ -35,7 +36,11 @@ def _query_tcestats_from_db(sql: str, **kwargs) -> pd.DataFrame:
     db_uri = f"file:{DATA_BASE_DIR}/{TCESTATS_DBNAME}?mode=ro"  # read-only
     with sqlite3.connect(db_uri, uri=True) as con:
         # convert the 0/1 value in column `tce_sradius_prov_is_solar` to bool
-        return pd.read_sql(sql, con, dtype={"tce_sradius_prov_is_solar": bool}, **kwargs)
+        df = pd.read_sql(sql, con, dtype={"tce_sradius_prov_is_solar": bool}, **kwargs)
+        # to avoid "PerformanceWarning: DataFrame is highly fragmented."
+        # in subsequent codes such as _add_helpful_columns_to_tcestats()
+        df = df.copy()
+        return df
 
 
 def _get_tcestats_of_tic_from_db(tic: Union[int, float, str, tuple, list]) -> pd.DataFrame:
@@ -44,10 +49,10 @@ def _get_tcestats_of_tic_from_db(tic: Union[int, float, str, tuple, list]) -> pd
     #   would be sufficient wo avoid SQL injection
     # - need to make _add_helpful_columns_to_tcestats()
     #   handle missing columns though
-    if isinstance(tic, (int, float, str)):
+    if isinstance(tic, (int, float, str)) or np.isscalar(tic):
         return _query_tcestats_from_db(
             "select * from tess_tcestats where ticid = ?",
-            params=[tic],
+            params=[int(tic)],
         )
     elif isinstance(tic, ARRAY_LIKE_TYPES):
         #
@@ -134,6 +139,7 @@ def display_tce_infos(
     return_as: Optional[str] = None,
     no_tce_html: Optional[str] = None,
 ) -> Optional[Union[str, None]]:
+    df = df.copy()  # avoid pandas warning for cases the df is a slice of an underlying df
     df["Codes"] = (
         "epoch=" + df["tce_time0bt"].astype(str) + ", "
         "duration_hr=" + df["tce_duration"].astype(str) + ", "
