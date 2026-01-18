@@ -147,8 +147,16 @@ def _format_Rp(val_str):
 def display_tce_infos(
     df: pd.DataFrame,
     return_as: Optional[str] = None,
-    no_tce_html: Optional[str] = None,
+    no_tce_html: Optional[str] = "",
 ) -> Optional[Union[str, None]]:
+    if df is None or len(df) < 1:
+        if return_as is None:
+            from IPython.display import HTML, display
+
+            return display(HTML(no_tce_html))
+        elif return_as == "html":
+            return no_tce_html
+
     df = (
         df.copy()
     )  # avoid pandas warning for cases the df is a slice of an underlying df
@@ -229,8 +237,6 @@ def display_tce_infos(
     ):
         styler = df[display_columns].style.format(format_specs).hide(axis="index")
         html = add_html_column_units(styler.to_html())
-        if len(df) < 1 and no_tce_html is not None:
-            html = no_tce_html
         if return_as is None:
             from IPython.display import HTML, display
 

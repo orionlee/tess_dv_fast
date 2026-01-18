@@ -17,7 +17,6 @@ import numpy as np
 import pandas as pd
 
 from tess_dv_fast_common import ARRAY_LIKE_TYPES
-
 from tess_spoc_dv_fast_spec import (
     DATA_BASE_DIR,
     TCESTATS_DBNAME,
@@ -34,7 +33,9 @@ def _query_tcestats_from_db(sql: str, **kwargs) -> pd.DataFrame:
         return df
 
 
-def _get_tcestats_of_tic_from_db(tic: Union[int, float, str, tuple, list]) -> pd.DataFrame:
+def _get_tcestats_of_tic_from_db(
+    tic: Union[int, float, str, tuple, list],
+) -> pd.DataFrame:
     if isinstance(tic, (int, float, str)) or np.isscalar(tic):
         return _query_tcestats_from_db(
             "select * from tess_spoc_tcestats where ticid = ?",
@@ -53,7 +54,9 @@ def _get_tcestats_of_tic_from_db(tic: Union[int, float, str, tuple, list]) -> pd
             params=tic,
         )
     else:
-        raise TypeError(f"tic must be a scalar or array-like. Actual type: {type(tic).__name__}")
+        raise TypeError(
+            f"tic must be a scalar or array-like. Actual type: {type(tic).__name__}"
+        )
 
 
 def _add_helpful_columns_to_tcestats(df: pd.DataFrame) -> None:
@@ -119,7 +122,9 @@ def get_tce_infos_of_tic(
     _add_helpful_columns_to_tcestats(df)
     # sort the result to the standard form
     # so that it is predictable for tce_filter_func
-    df = df.sort_values(by=["ticid", "sectors_span", "id"], ascending=[True, False, True])
+    df = df.sort_values(
+        by=["ticid", "sectors_span", "id"], ascending=[True, False, True]
+    )
     if tce_filter_func is not None and len(df) > 0:
         df = tce_filter_func(df)
 
@@ -131,7 +136,10 @@ def to_product_url(filename: str) -> str:
     # e.g,  hlsp_tess-spoc_tess_phot_0000000033979459-s0056-s0069_tess_v1_dvs-01.pdf
     #       hlsp_tess-spoc_tess_phot_0000000033979459-s0056-s0069_tess_v1_dvm.pdf
 
-    match = re.search(r"hlsp_tess-spoc_tess_phot_0+?(?P<ticid>[1-9]\d+)-(?P<sectors>s\d{4}-s\d{4})", filename)
+    match = re.search(
+        r"hlsp_tess-spoc_tess_phot_0+?(?P<ticid>[1-9]\d+)-(?P<sectors>s\d{4}-s\d{4})",
+        filename,
+    )
 
     sector_start, sector_end = match["sectors"].split("-")
     if sector_start == sector_end:
@@ -151,8 +159,15 @@ def to_product_url(filename: str) -> str:
 def display_tce_infos(
     df: pd.DataFrame,
     return_as: Optional[str] = None,
-    no_tce_html: Optional[str] = None,
+    no_tce_html: Optional[str] = "",
 ) -> Optional[Union[str, None]]:
+    if df is None or len(df) < 1:
+        if return_as is None:
+            from IPython.display import HTML, display
+
+            return display(HTML(no_tce_html))
+        elif return_as == "html":
+            return no_tce_html
 
     display_columns = [
         "id",
@@ -181,14 +196,14 @@ def display_tce_infos(
         "dvr": lambda f: f'<a target="_blank" href="{to_product_url(f)}">dvr</a>',
     }
 
-    with pd.option_context("display.max_colwidth", None, "display.max_rows", 999, "display.max_columns", 99):
+    with pd.option_context(
+        "display.max_colwidth", None, "display.max_rows", 999, "display.max_columns", 99
+    ):
         styler = df[display_columns].style.format(format_specs).hide(axis="index")
         # hack to add units to the header
         html = styler.to_html()
-        if len(df) < 1 and no_tce_html is not None:
-            html = no_tce_html
         if return_as is None:
-            from IPython.display import display, HTML
+            from IPython.display import HTML, display
 
             return display(HTML(html))
         elif return_as == "html":
