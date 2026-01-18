@@ -14,15 +14,15 @@ import pandas as pd
 from tess_dv_fast_common import (
     ARRAY_LIKE_TYPES,
     R_EARTH_TO_R_JUPITER,
+    add_html_column_units,
+    format_codes,
     format_exomast_id,
     format_offset_n_sigma,
-    format_codes,
-    add_html_column_units,
 )
 from tess_dv_fast_spec import (
     DATA_BASE_DIR,
-    TCESTATS_FILENAME,
     TCESTATS_DBNAME,
+    TCESTATS_FILENAME,
 )
 
 
@@ -43,7 +43,9 @@ def _query_tcestats_from_db(sql: str, **kwargs) -> pd.DataFrame:
         return df
 
 
-def _get_tcestats_of_tic_from_db(tic: Union[int, float, str, tuple, list]) -> pd.DataFrame:
+def _get_tcestats_of_tic_from_db(
+    tic: Union[int, float, str, tuple, list],
+) -> pd.DataFrame:
     # OPEN: support optional columns parameter?
     # - double quote the column names in the constructed SQL
     #   would be sufficient wo avoid SQL injection
@@ -67,7 +69,9 @@ def _get_tcestats_of_tic_from_db(tic: Union[int, float, str, tuple, list]) -> pd
             params=tic,
         )
     else:
-        raise TypeError(f"tic must be a scalar or array-like. Actual type: {type(tic).__name__}")
+        raise TypeError(
+            f"tic must be a scalar or array-like. Actual type: {type(tic).__name__}"
+        )
 
 
 def get_tce_infos_of_tic(
@@ -78,7 +82,9 @@ def get_tce_infos_of_tic(
     _add_helpful_columns_to_tcestats(df)
     # sort the result to the standard form
     # so that it is predictable for tce_filter_func
-    df = df.sort_values(by=["ticid", "sectors_span", "exomast_id"], ascending=[True, False, True])
+    df = df.sort_values(
+        by=["ticid", "sectors_span", "exomast_id"], ascending=[True, False, True]
+    )
     if tce_filter_func is not None and len(df) > 0:
         df = tce_filter_func(df)
 
@@ -114,8 +120,12 @@ def _add_helpful_columns_to_tcestats(df: pd.DataFrame) -> None:
     df["sectors_span"] = [get_sectors_span(s) for s in df["sectors"]]
     df["tce_prad_jup"] = df["tce_prad"] * R_EARTH_TO_R_JUPITER
     df["tce_depth_pct"] = df["tce_depth"] / 10000
-    df["tce_ditco_msky_sig"] = df["tce_ditco_msky"] / df["tce_ditco_msky_err"]  # TicOffset sig
-    df["tce_dicco_msky_sig"] = df["tce_dicco_msky"] / df["tce_dicco_msky_err"]  # OotOffset sig
+    df["tce_ditco_msky_sig"] = (
+        df["tce_ditco_msky"] / df["tce_ditco_msky_err"]
+    )  # TicOffset sig
+    df["tce_dicco_msky_sig"] = (
+        df["tce_dicco_msky"] / df["tce_dicco_msky_err"]
+    )  # OotOffset sig
     # Note: model's stellar density, `starDensitySolarDensity` in dvr xml, is not available in csv
 
 
@@ -139,12 +149,17 @@ def display_tce_infos(
     return_as: Optional[str] = None,
     no_tce_html: Optional[str] = None,
 ) -> Optional[Union[str, None]]:
-    df = df.copy()  # avoid pandas warning for cases the df is a slice of an underlying df
+    df = (
+        df.copy()
+    )  # avoid pandas warning for cases the df is a slice of an underlying df
     df["Codes"] = (
         "epoch=" + df["tce_time0bt"].astype(str) + ", "
         "duration_hr=" + df["tce_duration"].astype(str) + ", "
         "period=" + df["tce_period"].astype(str) + ", "
-        "label=" + '"' + df["exomast_id"].str.replace(r"TIC\d+", "", regex=True).str.lower() + '", '
+        "label="
+        + '"'
+        + df["exomast_id"].str.replace(r"TIC\d+", "", regex=True).str.lower()
+        + '", '
         "transit_depth_percent=" + df["tce_depth_pct"].map("{:.4f}".format) + ","
     )
 
@@ -159,8 +174,12 @@ def display_tce_infos(
         }
     )
 
-    df["TicOffset"] = df["tce_ditco_msky"].astype(str) + "|" + df["tce_ditco_msky_sig"].astype(str)
-    df["OotOffset"] = df["tce_dicco_msky"].astype(str) + "|" + df["tce_dicco_msky_sig"].astype(str)
+    df["TicOffset"] = (
+        df["tce_ditco_msky"].astype(str) + "|" + df["tce_ditco_msky_sig"].astype(str)
+    )
+    df["OotOffset"] = (
+        df["tce_dicco_msky"].astype(str) + "|" + df["tce_dicco_msky_sig"].astype(str)
+    )
 
     df["Rp"] = df["Rp"].astype(str) + "|" + df["tce_sradius_prov_is_solar"].astype(str)
 
@@ -189,14 +208,11 @@ def display_tce_infos(
         # prepend ticid to the columns to be displayed to differentiate between them
         display_columns = ["ticid"] + display_columns
 
-    def _format_product_link(f):
-        return f'<a target="_blank" href="{to_product_url(f)}">dvs</a>'
-
     format_specs = {
         "exomast_id": format_exomast_id,
-        "dvs": _format_product_link,
-        "dvm": _format_product_link,
-        "dvr": _format_product_link,
+        "dvs": lambda f: f'<a target="_blank" href="{to_product_url(f)}">dvs</a>',
+        "dvm": lambda f: f'<a target="_blank" href="{to_product_url(f)}">dvm</a>',
+        "dvr": lambda f: f'<a target="_blank" href="{to_product_url(f)}">dvr</a>',
         "Rp": _format_Rp,
         "Epoch": "{:.2f}",  # the csv has 2 digits precision
         "Duration": "{:.4f}",
@@ -208,13 +224,15 @@ def display_tce_infos(
         "Codes": format_codes,
     }
 
-    with pd.option_context("display.max_colwidth", None, "display.max_rows", 999, "display.max_columns", 99):
+    with pd.option_context(
+        "display.max_colwidth", None, "display.max_rows", 999, "display.max_columns", 99
+    ):
         styler = df[display_columns].style.format(format_specs).hide(axis="index")
         html = add_html_column_units(styler.to_html())
         if len(df) < 1 and no_tce_html is not None:
             html = no_tce_html
         if return_as is None:
-            from IPython.display import display, HTML
+            from IPython.display import HTML, display
 
             return display(HTML(html))
         elif return_as == "html":
