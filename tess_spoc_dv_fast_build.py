@@ -30,10 +30,14 @@ def _get_tess_dv_products_of_sectors(sectors):
     sector_start, sector_end = sectors.split("-")
     if sector_start == sector_end:
         # case single sector
-        script_name = f"{DATA_BASE_DIR}/hlsp_tess-spoc_tess_phot_{sector_start}_tess_v1_dl-dv.sh"
+        script_name = (
+            f"{DATA_BASE_DIR}/hlsp_tess-spoc_tess_phot_{sector_start}_tess_v1_dl-dv.sh"
+        )
     else:
         # case multi-sector
-        script_name = f"{DATA_BASE_DIR}/hlsp_tess-spoc_tess_phot_{sectors}_tess_v1_dl-dv.sh"
+        script_name = (
+            f"{DATA_BASE_DIR}/hlsp_tess-spoc_tess_phot_{sectors}_tess_v1_dl-dv.sh"
+        )
 
     df = pd.read_csv(
         script_name,
@@ -54,7 +58,9 @@ def _get_tess_tcestats_csv(sectors_val):
 
     # we can get all the info needed from dvs pdf names
     dvs_filename = filename[filename.str.contains("_dvs")]
-    dvs = dvs_filename.str.extract(rf"hlsp_tess-spoc_tess_phot_0+?(?P<ticid>[1-9]\d+)-s.+_tess_v1_dvs-0+?(?P<tce_plnt_num>[1-9]\d*).pdf")
+    dvs = dvs_filename.str.extract(
+        rf"hlsp_tess-spoc_tess_phot_0+?(?P<ticid>[1-9]\d+)-s.+_tess_v1_dvs-0+?(?P<tce_plnt_num>[1-9]\d*).pdf"
+    )
     dvs.ticid = dvs.ticid.astype("int64")
     dvs.tce_plnt_num = dvs.tce_plnt_num.astype(int)
 
@@ -97,7 +103,10 @@ def download_all_data():
     for url in sources_dv_sh_single_sector + sources_dv_sh_multi_sector:
         filename = _filename(url)
         filepath, is_cache_used = download_utils.download_file(
-            url, filename=filename, download_dir=DATA_BASE_DIR, return_is_cache_used=True
+            url,
+            filename=filename,
+            download_dir=DATA_BASE_DIR,
+            return_is_cache_used=True,
         )
         if not is_cache_used:
             print(f"DEBUG Downloaded to {filepath} from: {url}")
@@ -136,7 +145,9 @@ def _export_tcestats_as_db():
     try:  # use try / finally instead of with ... because sqlite3 context manager does not close the connection
         df.to_sql("tess_spoc_tcestats", con, if_exists="replace", index=False)
 
-        sql_index = "create index tess_spoc_tcestats_ticid on tess_spoc_tcestats(ticid);"
+        sql_index = (
+            "create index tess_spoc_tcestats_ticid on tess_spoc_tcestats(ticid);"
+        )
         cursor = con.cursor()
         cursor.execute(sql_index)
         cursor.close()
@@ -153,7 +164,12 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser(description="Update master TESS-SPOC TCE data")
-    parser.add_argument("--update", dest="update", action="store_true", help="Update master csv and sqlite db.")
+    parser.add_argument(
+        "--update",
+        dest="update",
+        action="store_true",
+        help="Update master csv and sqlite db.",
+    )
     parser.add_argument(
         "--db_only",
         dest="db_only",

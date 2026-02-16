@@ -66,7 +66,9 @@ def _render_home():
 """
     spoc_high_watermarks = tess_dv_fast_spec.get_high_watermarks()
     tess_spoc_high_watermarks = tess_spoc_dv_fast_spec.get_high_watermarks()
-    return most_of_html + f"""
+    return (
+        most_of_html
+        + f"""
         <footer style="margin-top: 5vh; font-size: 85%;">
             <p>SPOC (2 min cadence): based on data published by <a href="https://archive.stsci.edu/" target="_blank">MAST</a>:</p>
             <ul>
@@ -94,9 +96,12 @@ def _render_home():
     </body>
 </html>
 """
+    )
 
 
-def _apply_table_styling(content: str, table_id: str, sortable_cols: list = None) -> str:
+def _apply_table_styling(
+    content: str, table_id: str, sortable_cols: list = None
+) -> str:
     """Apply standard table styling and sorting to rendered content.
 
     Args:
@@ -116,7 +121,7 @@ def _apply_table_styling(content: str, table_id: str, sortable_cols: list = None
         for i in sortable_cols:
             content = content.replace(
                 f'class="col_heading level0 col{i}"',
-                f'class="col_heading level0 col{i} sort" data-sort="col{i}"'
+                f'class="col_heading level0 col{i} sort" data-sort="col{i}"',
             )
 
     return content
@@ -128,8 +133,12 @@ def _render_spoc_content(df_spoc):
     Returns:
         HTML content string
     """
-    spoc_content = tess_dv_fast.display_tce_infos(df_spoc, return_as="html", no_tce_html="No SPOC TCE")
-    spoc_content = _apply_table_styling(spoc_content, SPOC_TABLE_ID, SPOC_SORTABLE_COLUMNS)
+    spoc_content = tess_dv_fast.display_tce_infos(
+        df_spoc, return_as="html", no_tce_html="No SPOC TCE"
+    )
+    spoc_content = _apply_table_styling(
+        spoc_content, SPOC_TABLE_ID, SPOC_SORTABLE_COLUMNS
+    )
     return spoc_content
 
 
@@ -144,7 +153,9 @@ def _render_tess_spoc_content(df_tess_spoc):
         return ""
 
     # case have TESS-SPOC content
-    tess_spoc_content = tess_spoc_dv_fast.display_tce_infos(df_tess_spoc, return_as="html")
+    tess_spoc_content = tess_spoc_dv_fast.display_tce_infos(
+        df_tess_spoc, return_as="html"
+    )
     tess_spoc_content = _apply_table_styling(tess_spoc_content, TESS_SPOC_TABLE_ID)
 
     tess_spoc_content = f"""
@@ -157,6 +168,7 @@ def _render_tess_spoc_content(df_tess_spoc):
 {tess_spoc_content}
 """
     return tess_spoc_content
+
 
 def _render_error(error_msg: str, status_code: int = 400) -> tuple:
     """Render error page with given message and status code.

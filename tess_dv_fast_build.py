@@ -71,7 +71,9 @@ def _get_dv_products_of_sectors(sectors):
     )["filename"]
 
     dvs_filename = filename[filename.str.contains("_dvs.pdf")]
-    dvs = dvs_filename.str.extract(rf"tess\d+-{sectors}-0+?(?P<ticid>[1-9]\d+)-(?P<tce_plnt_num>\d\d)-")
+    dvs = dvs_filename.str.extract(
+        rf"tess\d+-{sectors}-0+?(?P<ticid>[1-9]\d+)-(?P<tce_plnt_num>\d\d)-"
+    )
     dvs.ticid = dvs.ticid.astype("int64")
     dvs.tce_plnt_num = dvs.tce_plnt_num.astype(int)
     dvs["dvs"] = dvs_filename
@@ -154,7 +156,10 @@ def download_all_data(minimal_db=False):
     for url in sources_dv_sh_single_sector + sources_dv_sh_multi_sector:
         filename = _filename(url)
         filepath, is_cache_used = download_utils.download_file(
-            url, filename=filename, download_dir=DATA_BASE_DIR, return_is_cache_used=True
+            url,
+            filename=filename,
+            download_dir=DATA_BASE_DIR,
+            return_is_cache_used=True,
         )
         if not is_cache_used:
             print(f"DEBUG Downloaded to {filepath} from: {url}")
@@ -168,7 +173,10 @@ def download_all_data(minimal_db=False):
         filename = _filename(url)
 
         filepath, is_cache_used = download_utils.download_file(
-            url, filename=filename, download_dir=DATA_BASE_DIR, return_is_cache_used=True
+            url,
+            filename=filename,
+            download_dir=DATA_BASE_DIR,
+            return_is_cache_used=True,
         )
         if not is_cache_used:
             print(f"DEBUG Downloaded to {filepath} from: {url}")
@@ -229,7 +237,7 @@ def _export_tcestats_as_db(minimal_db=False):
     )
 
     # create a column to flag if the stellar radius is assumed to be solar or not
-    df["tce_sradius_prov_is_solar"] = (df["tce_sradius_prov"] == "Solar")
+    df["tce_sradius_prov_is_solar"] = df["tce_sradius_prov"] == "Solar"
     if minimal_db:
         df.drop(columns=["tce_sradius_prov"], inplace=True)
 
@@ -287,7 +295,12 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser(description="Update master TESS TCE data")
-    parser.add_argument("--update", dest="update", action="store_true", help="Update master csv and sqlite db.")
+    parser.add_argument(
+        "--update",
+        dest="update",
+        action="store_true",
+        help="Update master csv and sqlite db.",
+    )
     parser.add_argument(
         "--minimal_db",
         dest="minimal_db",

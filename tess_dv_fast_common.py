@@ -62,8 +62,10 @@ def format_codes(codes):
 
 def format_product_url(to_product_url_func):
     """Return a formatter function for product links (dvs, dvm, dvr)."""
+
     def _format(filename):
         return f'<a target="_blank" href="{to_product_url_func(filename)}">{filename[-10:]}</a>'
+
     return _format
 
 
