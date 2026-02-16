@@ -1,7 +1,7 @@
 """TESS-SPOC TCE data specifications and source URLs."""
 
-from pathlib import Path
 import re
+from pathlib import Path
 
 DATA_BASE_DIR = f"{Path(__file__).parent}/data/tess_dv_fast"
 
@@ -16,7 +16,7 @@ sources_dv_sh_single_sector = [
         "https://archive.stsci.edu/hlsps/tess-spoc/download_scripts/"
         f"hlsp_tess-spoc_tess_phot_s{sec:04d}_tess_v1_dl-dv.sh"
     )
-    for sec in range(36, 79 + 1)
+    for sec in range(36, 81 + 1)
 ]
 
 

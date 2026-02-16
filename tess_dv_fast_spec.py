@@ -1,7 +1,7 @@
 """TESS TCE (SPOC) data specifications and source URLs."""
 
-from pathlib import Path
 import re
+from pathlib import Path
 
 DATA_BASE_DIR = f"{Path(__file__).parent}/data/tess_dv_fast"
 
@@ -107,6 +107,7 @@ sources_tcestats_single_sector = [
     "https://archive.stsci.edu/missions/tess/catalogs/tce/tess2025206194924-s0095-s0095_dvr-tcestats.csv",
     "https://archive.stsci.edu/missions/tess/catalogs/tce/tess2025232062523-s0096-s0096_dvr-tcestats.csv",
     "https://archive.stsci.edu/missions/tess/catalogs/tce/tess2025258033922-s0097-s0097_dvr-tcestats.csv",
+    "https://archive.stsci.edu/missions/tess/catalogs/tce/tess2025312234920-s0098-s0098_dvr-tcestats.csv",
 ]
 
 sources_tcestats_multi_sector = [
@@ -234,6 +235,7 @@ sources_dv_sh_single_sector = [
     "https://archive.stsci.edu/missions/tess/download_scripts/sector/tesscurl_sector_95_dv.sh",
     "https://archive.stsci.edu/missions/tess/download_scripts/sector/tesscurl_sector_96_dv.sh",
     "https://archive.stsci.edu/missions/tess/download_scripts/sector/tesscurl_sector_97_dv.sh",
+    "https://archive.stsci.edu/missions/tess/download_scripts/sector/tesscurl_sector_98_dv.sh",
 ]
 
 sources_dv_sh_multi_sector = [
