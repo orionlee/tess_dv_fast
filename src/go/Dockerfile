@@ -3,7 +3,7 @@
 # https://github.com/GoogleContainerTools/distroless/blob/main/examples/go/Dockerfile
 
 # Stage 1: Build the Go application
-FROM golang:1.22-alpine AS build
+FROM golang:1.26-alpine AS build
 WORKDIR /app
 COPY . .
 RUN go mod download
