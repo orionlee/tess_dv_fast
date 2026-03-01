@@ -1,0 +1,27 @@
+# To get started with Dependabot version updates, you'll need to specify which
+# package ecosystems to update and where the package manifests are located.
+# Please see the documentation for all configuration options:
+# https://docs.github.com/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
+
+version: 2
+updates:
+  - package-ecosystem: "docker"
+    # Docker - Go version
+    directory: "/src/go"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "docker"
+    # Docker - Python version
+    directory: "/tess_dv_fast_webapp_gcloud"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "pip"
+    # Python PIP - google cloud
+    directory: "/tess_dv_fast_webapp_gcloud"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "pip"
+    # Python PIP - generic
+    directory: "/"
+    schedule:
+      interval: "weekly"
