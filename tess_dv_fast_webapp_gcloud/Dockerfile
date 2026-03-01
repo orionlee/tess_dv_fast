@@ -10,7 +10,7 @@
 # 1. Build a virtualenv to get production dependencies.
 #    Use the official lightweight Python image.
 #    https://hub.docker.com/_/python
-FROM python:3.11-slim-bookworm AS build-venv
+FROM python:3.14-slim-bookworm AS build-venv
 COPY requirements.txt /requirements.txt
 RUN python3 -m venv /venv
 RUN /venv/bin/pip install --disable-pip-version-check --no-cache-dir -r /requirements.txt
