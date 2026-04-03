@@ -45,13 +45,13 @@ var TCEStatsSingleSectorSources = []string{
 // TCE stats CSV sources (multi sector)
 var TCEStatsMultiSectorSources = []string{
 	// ... (truncated, only the latest one is here)
-	"https://archive.stsci.edu/missions/tess/catalogs/tce/tess2018206190142-s0001-s0092_dvr-tcestats.csv",
+	"https://archive.stsci.edu/missions/tess/catalogs/tce/tess2026033114116-s0100-s0100_dvr-tcestats.csv",
 }
 
 // TESS-SPOC TCE sources
 var TessSpocSingleSectorSources = []string{
 	// ... (truncated, only the latest ones are here)
-	"https://archive.stsci.edu/hlsps/tess-spoc/download_scripts/hlsp_tess-spoc_tess_phot_s0081_tess_v1_dl-dv.sh",
+	"https://archive.stsci.edu/hlsps/tess-spoc/download_scripts/hlsp_tess-spoc_tess_phot_s0082_tess_v1_dl-dv.sh",
 }
 
 // TESS-SPOC TCE sources, multi-sector
