@@ -27,10 +27,10 @@ var (
 
 // High watermarks info
 type HighWatermarks struct {
-	SpocSingleSector   string `json:"single_sector"`
-	SpocMultiSector    string `json:"multi_sector"`
+	SpocSingleSector     string `json:"single_sector"`
+	SpocMultiSector      string `json:"multi_sector"`
 	TessSpocSingleSector string `json:"tess_spoc_single_sector"`
-	TessSpocMultiSector string `json:"tess_spoc_multi_sector"`
+	TessSpocMultiSector  string `json:"tess_spoc_multi_sector"`
 }
 
 // Go version doesn't really need the sources, relying on on the sqlite db created by Python version
@@ -39,7 +39,7 @@ type HighWatermarks struct {
 // TCE stats CSV sources (single sector)
 var TCEStatsSingleSectorSources = []string{
 	// ... (truncated, only the latest one is here)
-	"https://archive.stsci.edu/missions/tess/catalogs/tce/tess2026060041115-s0101-s0101_dvr-tcestats.csv",
+	"https://archive.stsci.edu/missions/tess/catalogs/tce/tess2026086122114-s0102-s0102_dvr-tcestats.csv",
 }
 
 // TCE stats CSV sources (multi sector)
@@ -51,7 +51,7 @@ var TCEStatsMultiSectorSources = []string{
 // TESS-SPOC TCE sources
 var TessSpocSingleSectorSources = []string{
 	// ... (truncated, only the latest ones are here)
-	"https://archive.stsci.edu/hlsps/tess-spoc/download_scripts/hlsp_tess-spoc_tess_phot_s0082_tess_v1_dl-dv.sh",
+	"https://archive.stsci.edu/hlsps/tess-spoc/download_scripts/hlsp_tess-spoc_tess_phot_s0084_tess_v1_dl-dv.sh",
 }
 
 // TESS-SPOC TCE sources, multi-sector
