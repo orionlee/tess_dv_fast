@@ -112,6 +112,7 @@ sources_tcestats_single_sector = [
     "https://archive.stsci.edu/missions/tess/catalogs/tce/tess2026033114116-s0100-s0100_dvr-tcestats.csv",
     "https://archive.stsci.edu/missions/tess/catalogs/tce/tess2026060041115-s0101-s0101_dvr-tcestats.csv",
     "https://archive.stsci.edu/missions/tess/catalogs/tce/tess2026086122114-s0102-s0102_dvr-tcestats.csv",
+    "https://archive.stsci.edu/missions/tess/catalogs/tce/tess2026111123513-s0103-s0103_dvr-tcestats.csv",
 ]
 
 sources_tcestats_multi_sector = [
@@ -139,6 +140,7 @@ sources_tcestats_multi_sector = [
     "https://archive.stsci.edu/missions/tess/catalogs/tce/tess2019199201929-s0014-s0078_dvr-tcestats.csv",
     "https://archive.stsci.edu/missions/tess/catalogs/tce/tess2019199201929-s0014-s0086_dvr-tcestats.csv",
     "https://archive.stsci.edu/missions/tess/catalogs/tce/tess2018206190142-s0001-s0092_dvr-tcestats.csv",
+    "https://archive.stsci.edu/missions/tess/catalogs/tce/tess2018206190142-s0001-s0096_dvr-tcestats.csv",
 ]
 
 sources_dv_sh_single_sector = [
@@ -244,6 +246,7 @@ sources_dv_sh_single_sector = [
     "https://archive.stsci.edu/missions/tess/download_scripts/sector/tesscurl_sector_100_dv.sh",
     "https://archive.stsci.edu/missions/tess/download_scripts/sector/tesscurl_sector_101_dv.sh",
     "https://archive.stsci.edu/missions/tess/download_scripts/sector/tesscurl_sector_102_dv.sh",
+    "https://archive.stsci.edu/missions/tess/download_scripts/sector/tesscurl_sector_103_dv.sh",
 ]
 
 sources_dv_sh_multi_sector = [
@@ -271,6 +274,7 @@ sources_dv_sh_multi_sector = [
     "https://archive.stsci.edu/missions/tess/download_scripts/sector/tesscurl_multisector_s0014-s0078_dv.sh",
     "https://archive.stsci.edu/missions/tess/download_scripts/sector/tesscurl_multisector_s0014-s0086_dv.sh",
     "https://archive.stsci.edu/missions/tess/download_scripts/sector/tesscurl_multisector_s0001-s0092_dv.sh",
+    "https://archive.stsci.edu/missions/tess/download_scripts/sector/tesscurl_multisector_s0001-s0096_dv.sh",
 ]
 
 
