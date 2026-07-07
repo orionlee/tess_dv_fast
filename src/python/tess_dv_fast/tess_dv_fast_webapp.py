@@ -26,7 +26,7 @@ EXOFOP_BASE_URL = "https://exofop.ipac.caltech.edu/tess/target.php"
 def get_build_sha():
     from pathlib import Path
 
-    build_fname = Path(__file__).parent / "build.txt"
+    build_fname = Path(".") / "build.txt"
     try:
         with build_fname.open() as f:
             return f.readline().strip()
