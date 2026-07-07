@@ -4,7 +4,7 @@
 #
 
 base=`dirname $0`
-proj_base=`dirname $0`/../../..
+proj_base=`dirname $0`/../..
 dest=$1
 if [ "$dest" == "" ]; then
     dest=$proj_base/build

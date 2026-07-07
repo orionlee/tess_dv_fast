@@ -74,4 +74,4 @@ python -m tess_dv_fast.tess_spoc_dv_fast_build --update
 
 ## Deploying the app to cloud environments
 
-- Instructions for [Google Cloud Run deployment](src/python/tess_dv_fast_webapp_gcloud/README.md).
+- Instructions for [Google Cloud Run deployment](src/python_gcloud/README.md).

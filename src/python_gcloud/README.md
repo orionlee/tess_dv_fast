@@ -2,11 +2,11 @@
 
 - Contains additional files needed for Google Cloud Run deployment
 
-- Run the following to create a directory at `../build` with the necessary files to deploy to Google Cloud Run.
+- Run the following to create a directory at `<project_root>/build` with the necessary files to deploy to Google Cloud Run.
 
 ```shell
-# at tess_dv_fast_webapp_gcloud/
-assemble.sh ../../../build
+# at project root
+src/python_gcloud/assemble.sh
 ```
 
 

@@ -12,12 +12,12 @@ updates:
       interval: "weekly"
   - package-ecosystem: "docker"
     # Docker - Python version
-    directory: "/src/python/tess_dv_fast_webapp_gcloud"
+      directory: "/src/python_gcloud"
     schedule:
       interval: "weekly"
   - package-ecosystem: "pip"
     # Python PIP - google cloud
-    directory: "/src/python/tess_dv_fast_webapp_gcloud"
+    directory: "/src/python_gcloud"
     schedule:
       interval: "weekly"
   - package-ecosystem: "pip"
