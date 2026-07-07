@@ -10,12 +10,12 @@ import pandas as pd
 
 from .tess_dv_fast_spec import (
     DATA_BASE_DIR,
-    TCESTATS_FILENAME,
     TCESTATS_DBNAME,
-    sources_tcestats_single_sector,
-    sources_tcestats_multi_sector,
-    sources_dv_sh_single_sector,
+    TCESTATS_FILENAME,
     sources_dv_sh_multi_sector,
+    sources_dv_sh_single_sector,
+    sources_tcestats_multi_sector,
+    sources_tcestats_single_sector,
 )
 
 
@@ -30,17 +30,23 @@ def _filename(url):
 def _add_exomast_id(df):
     # id to construct exomast URL, e.g., TIC232646881S0073S0073TCE1
     # it can serves as a unique ID for the TCE across sectors too.
-    df.insert(
-        loc=0,
-        column="exomast_id",
-        value=(
-            "TIC"
-            + df["ticid"].astype(str)
-            + df["sectors"].str.upper().str.replace("-", "")
-            + "TCE"
-            + df["tce_plnt_num"].astype(str)
-        ),
+    #
+    # pandas note:
+    #   replaced df.insert(loc=0, column="exomast_id", ...) with pd.concat
+    #   to avoid PerformanceWarning: DataFrame is highly fragmented
+
+    exomast_id_values = (
+        "TIC"
+        + df["ticid"].astype(str)
+        + df["sectors"].str.upper().str.replace("-", "")
+        + "TCE"
+        + df["tce_plnt_num"].astype(str)
     )
+    exomast_id_df = pd.DataFrame({"exomast_id": exomast_id_values}, index=df.index)
+
+    # Concatenate them horizontally (axis=1)
+    new_df = pd.concat([exomast_id_df, df], axis=1)
+    return new_df
 
 
 def _get_dv_products_of_sectors(sectors):
@@ -99,7 +105,7 @@ def _get_dv_products_of_sectors(sectors):
         res = pd.merge(res, df, on="ticid", how="left", validate="many_to_one")
 
     res["sectors"] = sectors
-    _add_exomast_id(res)
+    res = _add_exomast_id(res)
     res.drop(["ticid", "tce_plnt_num", "sectors"], axis="columns", inplace=True)
     return res
 
@@ -134,7 +140,7 @@ def _append_to_tcestats_csv(filepath, sectors_val, dest):
     df["sectors"] = sectors_val
 
     # uniquely identify a TCE across all sectors
-    _add_exomast_id(df)
+    df = _add_exomast_id(df)
 
     # include filenames of dvs, dvm, etc.
     df_filenames = _get_dv_products_of_sectors(sectors_val)
