@@ -4,9 +4,10 @@
 #
 
 base=`dirname $0`
+proj_base=`dirname $0`/../../..
 dest=$1
 if [ "$dest" == "" ]; then
-    dest=$base/../build
+    dest=$proj_base/build
 fi
 
 # the commit SHA
@@ -26,13 +27,14 @@ mkdir -p $dest
 
 mkdir -p $dest/data/tess_dv_fast
 # --update --archive
-cp --update --archive  $base/../data/tess_dv_fast/tess_tcestats.db  $dest/data/tess_dv_fast
-cp --update --archive  $base/../data/tess_dv_fast/tess_spoc_tcestats.db  $dest/data/tess_dv_fast
+cp --update --archive  $proj_base/data/tess_dv_fast/tess_tcestats.db  $dest/data/tess_dv_fast
+cp --update --archive  $proj_base/data/tess_dv_fast/tess_spoc_tcestats.db  $dest/data/tess_dv_fast
 
 cp --update --archive  $base/*  $dest
 cp --update --archive  $base/.*  $dest
-cp --update --archive  $base/../tess_dv_fast_common.py $base/../tess_dv_fast.py $base/../tess_dv_fast_spec.py $base/../tess_dv_fast_webapp.py  $dest
-cp --update --archive  $base/../tess_spoc_dv_fast.py $base/../tess_spoc_dv_fast_spec.py  $dest
+
+mkdir -p $dest/tess_dv_fast
+cp --update --archive  $proj_base/src/python/tess_dv_fast/*.py  $dest/tess_dv_fast
 
 # save commit SHA to be displayed in the UI.
 echo $commit_sha > $dest/build.txt

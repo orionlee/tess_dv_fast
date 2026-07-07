@@ -12,6 +12,10 @@ For SPOC, it also provides a summary of key TCE parameters, e.g. looking up all 
 Install the package into your Python environment:
 
 ```shell
+# include the web application
+pip install .[webapp]
+
+# Or just the core package
 pip install .
 ```
 
@@ -70,4 +74,4 @@ python -m tess_dv_fast.tess_spoc_dv_fast_build --update
 
 ## Deploying the app to cloud environments
 
-- Instructions for [Google Cloud Run deployment](tess_dv_fast_webapp_gcloud/README.md).
+- Instructions for [Google Cloud Run deployment](src/python/tess_dv_fast_webapp_gcloud/README.md).

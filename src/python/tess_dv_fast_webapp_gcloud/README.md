@@ -5,7 +5,8 @@
 - Run the following to create a directory at `../build` with the necessary files to deploy to Google Cloud Run.
 
 ```shell
-assemble.sh ../build
+# at tess_dv_fast_webapp_gcloud/
+assemble.sh ../../../build
 ```
 
 
