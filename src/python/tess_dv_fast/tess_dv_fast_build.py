@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from tess_dv_fast_spec import (
+from .tess_dv_fast_spec import (
     DATA_BASE_DIR,
     TCESTATS_FILENAME,
     TCESTATS_DBNAME,
@@ -147,7 +147,7 @@ def _append_to_tcestats_csv(filepath, sectors_val, dest):
 
 def download_all_data(minimal_db=False):
     """Download all relevant data locally."""
-    import download_utils
+    from . import download_utils
 
     # TODO: scrape the listing pages to get the list of URLs, instead of hardcoded lists above
 

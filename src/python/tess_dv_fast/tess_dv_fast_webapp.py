@@ -6,10 +6,10 @@ from flask import Flask
 from flask import request
 from markupsafe import escape
 
-import tess_dv_fast  # standard SPOC TCEs
-import tess_dv_fast_spec
-import tess_spoc_dv_fast  # HLSP TESS-SPOC TCEs
-import tess_spoc_dv_fast_spec
+from . import tess_dv_fast  # standard SPOC TCEs
+from . import tess_dv_fast_spec
+from . import tess_spoc_dv_fast  # HLSP TESS-SPOC TCEs
+from . import tess_spoc_dv_fast_spec
 
 
 app = Flask(__name__)

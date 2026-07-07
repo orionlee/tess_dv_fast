@@ -8,7 +8,7 @@ import shutil
 
 import pandas as pd
 
-from tess_spoc_dv_fast_spec import (
+from .tess_spoc_dv_fast_spec import (
     DATA_BASE_DIR,
     TCESTATS_FILENAME,
     TCESTATS_DBNAME,
@@ -84,7 +84,7 @@ def _append_to_tcestats_csv(sectors_val, dest):
 
 def download_all_data():
     """Download all relevant data locally."""
-    import download_utils
+    from . import download_utils
 
     def get_sectors_val(filename):
         # eg, hlsp_tess-spoc_tess_phot_s0036_tess_v1_dl-dv.sh

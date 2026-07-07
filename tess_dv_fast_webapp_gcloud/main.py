@@ -1,6 +1,6 @@
 import os
 
-import tess_dv_fast_webapp
+from tess_dv_fast import tess_dv_fast_webapp
 
 #
 # Entrypoint for Google Cloud Run deployment

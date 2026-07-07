@@ -16,8 +16,8 @@ from typing import Callable, Optional, Union
 import numpy as np
 import pandas as pd
 
-from tess_dv_fast_common import ARRAY_LIKE_TYPES
-from tess_spoc_dv_fast_spec import (
+from .tess_dv_fast_common import ARRAY_LIKE_TYPES
+from .tess_spoc_dv_fast_spec import (
     DATA_BASE_DIR,
     TCESTATS_DBNAME,
 )

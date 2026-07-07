@@ -1,9 +1,11 @@
 """TESS-SPOC TCE data specifications and source URLs."""
 
+import os
 import re
 from pathlib import Path
 
-DATA_BASE_DIR = f"{Path(__file__).parent}/data/tess_dv_fast"
+_BASE_PATH = os.environ.get("TESS_DB_BASE_PATH", "./")
+DATA_BASE_DIR = str((Path(_BASE_PATH) / "data" / "tess_dv_fast").resolve())
 
 TCESTATS_FILENAME = "tess_spoc_tcestats.csv"
 TCESTATS_DBNAME = "tess_spoc_tcestats.db"

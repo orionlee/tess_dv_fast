@@ -11,7 +11,7 @@ from typing import Callable, Optional, Union
 import numpy as np
 import pandas as pd
 
-from tess_dv_fast_common import (
+from .tess_dv_fast_common import (
     ARRAY_LIKE_TYPES,
     R_EARTH_TO_R_JUPITER,
     add_html_column_units,
@@ -19,7 +19,7 @@ from tess_dv_fast_common import (
     format_exomast_id,
     format_offset_n_sigma,
 )
-from tess_dv_fast_spec import (
+from .tess_dv_fast_spec import (
     DATA_BASE_DIR,
     TCESTATS_DBNAME,
     TCESTATS_FILENAME,

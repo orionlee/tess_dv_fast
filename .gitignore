@@ -4,6 +4,9 @@
 # python cache
 __pycache__/
 
+# package meta data
+*.egg-info/
+
 # juypter internals
 .ipynb_checkpoints/
 

@@ -9,42 +9,45 @@ For SPOC, it also provides a summary of key TCE parameters, e.g. looking up all 
 
 ## Installation
 
-In your Python virtual environment, install the dependency
-
-Using `pip`:
+Install the package into your Python environment:
 
 ```shell
-pip install -r requirements.txt
+pip install .
 ```
 
-Using `conda`:
+For development: install the package in editable mode:
 
 ```shell
-conda install --file requirements.txt
+pip install -e .[dev]
 ```
 
-Download the required data and build the local database.
+Download the required data and build the local database:
 
 ```shell
-python tess_dv_fast_build.py --update --minimal_db
-python tess_spoc_dv_fast_build.py --update
+python -m tess_dv_fast.tess_dv_fast_build --update --minimal_db
+python -m tess_dv_fast.tess_spoc_dv_fast_build --update
 ```
 
 Start the webapp:
 
 ```shell
-flask --app tess_dv_fast_webapp run
+flask --app tess_dv_fast.tess_dv_fast_webapp run
 ```
 
 You are done! The app will be available at http://localhost:5000/tces .
 
-
 Notes:
 
-- To change the port of the webapp, add `-p <port_number>` to `flask` line.
-- The packages downloads the data from MAST and creates a local sqlite databases at `data/tess_dv_fast/tess_tcestats.db` (SPOC) and  `data/tess_dv_fast/tess_spoc_tcestats.db` (TESS-SPOC) . There is also a csv version in the same directory.
-- For SPOC, the sqlite database contains a minimal set of data needed to support the webapp. Optionally, you could create a database with all the TCE parameters provided by MAST by omitting `--minimal-db`.
-- It is tested on Python 3.10, but should be compatible with any recent Python3 versions.
+- To change the port of the webapp, add `-p <port_number>` to the `flask` command.
+- The package downloads the data from MAST and creates local SQLite databases under `./data/tess_dv_fast/` by default. To use a different base directory, set `TESS_DB_BASE_PATH` before running the build commands, for example:
+
+  ```shell
+  export TESS_DB_BASE_PATH=/path/to/base
+  ```
+
+  The resulting database files will then be located at `$TESS_DB_BASE_PATH/data/tess_dv_fast/tess_tcestats.db` (SPOC) and `$TESS_DB_BASE_PATH/data/tess_dv_fast/tess_spoc_tcestats.db` (TESS-SPOC).
+- For SPOC, the SQLite database contains a minimal set of data needed to support the webapp. Optionally, you could create a database with all the TCE parameters provided by MAST by omitting `--minimal_db`.
+- It is tested on Python 3.10, but should be compatible with any recent Python 3 versions.
 
 
 ## Adding new data
@@ -61,8 +64,8 @@ The package relies on TCE bulk download data provided by MAST. When new data is 
 3. Update the database:
 
 ```shell
-python tess_dv_fast_build.py --update --minimal_db
-python tess_spoc_dv_fast_build.py --update
+python -m tess_dv_fast.tess_dv_fast_build --update --minimal_db
+python -m tess_dv_fast.tess_spoc_dv_fast_build --update
 ```
 
 ## Deploying the app to cloud environments
