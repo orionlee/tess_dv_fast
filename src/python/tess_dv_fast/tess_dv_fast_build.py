@@ -242,6 +242,11 @@ def _export_tcestats_as_db(minimal_db=False):
         usecols=usecols,
     )
 
+    # To avoid "PerformanceWarning: DataFrame is highly fragmented" ib subsequent calls
+    # - the df from read_csv above tends to be fragmented,
+    #   given the large number of columns and mixed data types.
+    df = df.copy()
+
     # create a column to flag if the stellar radius is assumed to be solar or not
     df["tce_sradius_prov_is_solar"] = df["tce_sradius_prov"] == "Solar"
     if minimal_db:
