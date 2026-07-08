@@ -15,24 +15,26 @@ import (
 
 // TCERecord represents a single TCE record from the database
 type TCERecord struct {
-	TICID           int64
-	ExoMastID       string
-	Sectors         string
-	TCEPlanetNum    int
-	DVS             string
-	DVM             string
-	DVR             string
-	TCEDepth        float64
-	TCEPeriod       float64
-	TCETime0BT      float64
-	TCEDuration     float64
-	TCEPRad         float64
-	TCEImpact       float64
+	TICID                 int64
+	ExoMastID             string
+	Sectors               string
+	TCEPlanetNum          int
+	DVS                   string
+	DVM                   string
+	DVR                   string
+	TCEDepth              float64
+	TCEPeriod             float64
+	TCETime0BT            float64
+	TCEDuration           float64
+	TCEPRad               float64
+	TCEImpact             float64
 	TCESRadiusProvIsSolar bool
-	TCEDitcoMsky    float64
-	TCEDitcoMskyErr float64
-	TCEDiccoMsky    float64
-	TCEDiccoMskyErr float64
+	TCEBinOedpstatIsSig   bool
+	TCEWsMaxMESIsSig      bool
+	TCEDitcoMsky          float64
+	TCEDitcoMskyErr       float64
+	TCEDiccoMsky          float64
+	TCEDiccoMskyErr       float64
 }
 
 // SpocTCEDisplayInfo represents formatted TCE info for display
@@ -47,18 +49,18 @@ type SpocTCEDisplayInfo struct {
 	Period       float64
 	Epoch        float64
 	Duration     float64
-	DepthPercent        float64
-	PlanetRadius string  // HTML-formatted string, to highlight entries of which the radius is not reliable
+	DepthPercent string // HTML-formatted string, to highlight entries of which there are signs of EB (odd-even test, etc.)
+	PlanetRadius string // HTML-formatted string, to highlight entries of which the radius is not reliable
 	ImpactB      float64
 	SectorSpan   int
 }
 
 type TessSpocTCEDisplayInfo struct {
-	ID           string
-	DVS          string
-	DVM          string
-	DVR          string
-	SectorSpan   int
+	ID         string
+	DVS        string
+	DVM        string
+	DVR        string
+	SectorSpan int
 }
 
 // GetTCEInfosOfTIC retrieves TCE information for a given TIC ID
@@ -72,7 +74,7 @@ func GetTCEInfosOfTIC(tic int64) ([]TCERecord, error) {
 	}
 	defer db.Close()
 
-	rows, err := db.Query("SELECT ticid, exomast_id, sectors, tce_plnt_num, dvs, dvm, dvr, tce_depth, tce_period, tce_time0bt, tce_duration, tce_prad, tce_impact, tce_sradius_prov_is_solar, tce_ditco_msky, tce_ditco_msky_err, tce_dicco_msky, tce_dicco_msky_err FROM tess_tcestats WHERE ticid = ?", tic)
+	rows, err := db.Query("SELECT ticid, exomast_id, sectors, tce_plnt_num, dvs, dvm, dvr, tce_depth, tce_period, tce_time0bt, tce_duration, tce_prad, tce_impact, tce_sradius_prov_is_solar, tce_bin_oedp_stat_is_sig, tce_ws_maxmes_is_sig, tce_ditco_msky, tce_ditco_msky_err, tce_dicco_msky, tce_dicco_msky_err FROM tess_tcestats WHERE ticid = ?", tic)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query database: %w", err)
 	}
@@ -96,6 +98,8 @@ func GetTCEInfosOfTIC(tic int64) ([]TCERecord, error) {
 			&r.TCEPRad,
 			&r.TCEImpact,
 			&r.TCESRadiusProvIsSolar,
+			&r.TCEBinOedpstatIsSig,
+			&r.TCEWsMaxMESIsSig,
 			&r.TCEDitcoMsky,
 			&r.TCEDitcoMskyErr,
 			&r.TCEDiccoMsky,
@@ -186,7 +190,8 @@ func GetSectorsSpan(sectorsStr string) int {
 
 // generateTessSpocID creates a unique ID for TESS-SPOC TCEs
 // Format: TIC<ticid>S<start_sector>S<end_sector>TCE<plnt_num>_f
-//         essentially exomast_id with a "_f" suffix (to signify it is from TESS-SPOC)
+//
+//	essentially exomast_id with a "_f" suffix (to signify it is from TESS-SPOC)
 func generateTessSpocID(r TCERecord) string {
 	return fmt.Sprintf("TIC%d%s", r.TICID, strings.ToUpper(strings.ReplaceAll(r.Sectors, "-", ""))) + fmt.Sprintf("TCE%d", r.TCEPlanetNum) + "_f"
 }
@@ -293,11 +298,29 @@ func ToTessSpocProductURL(filename string) string {
 }
 
 func formatPlanetRadius(pRadius float64, isSRadiusSolar bool) string {
-	style := ""
+	styleAndTitle := ""
 	if isSRadiusSolar {
-		style = ` style="color: red; font-weight: bold;"`
+		styleAndTitle = ` style="color: red; font-weight: bold;" title="Assuming the stellar radius is 1 Rsun."`
 	}
-	return fmt.Sprintf("<span%s>%.3f</span>", style, pRadius)
+	return fmt.Sprintf("<span%s>%.3f</span>", styleAndTitle, pRadius)
+}
+
+func formatDepth(depthPct float64, isSigTCEBinOedpStat bool, isSigTCEWsMaxMES bool) string {
+	style := ""
+	title := ""
+	if isSigTCEBinOedpStat || isSigTCEWsMaxMES {
+		style = ` style="color: red; font-weight: bold;"`
+
+		title = " title=\""
+		if isSigTCEBinOedpStat {
+			title += "Significant odd-even depth difference. "
+		}
+		if isSigTCEWsMaxMES {
+			title += "Significant weak secondary. "
+		}
+		title += "\""
+	}
+	return fmt.Sprintf("<span%s%s>%.4f</span>", style, title, depthPct)
 }
 
 // FormatSpocTCEForDisplay converts a SPOC TCE record to display format with HTML formatting
@@ -329,7 +352,7 @@ func FormatSpocTCEForDisplay(record TCERecord) SpocTCEDisplayInfo {
 		Period:       record.TCEPeriod,
 		Epoch:        record.TCETime0BT,
 		Duration:     record.TCEDuration,
-		DepthPercent:        depthPct,
+		DepthPercent: formatDepth(depthPct, record.TCEBinOedpstatIsSig, record.TCEWsMaxMESIsSig),
 		PlanetRadius: formatPlanetRadius(pRadiusJupiter, record.TCESRadiusProvIsSolar),
 		ImpactB:      record.TCEImpact,
 		SectorSpan:   GetSectorsSpan(record.Sectors),
@@ -339,7 +362,7 @@ func FormatSpocTCEForDisplay(record TCERecord) SpocTCEDisplayInfo {
 // FormatTessSpocTCEForDisplay converts a SPOC TCE record to display format with HTML formatting
 func FormatTessSpocTCEForDisplay(record TCERecord) TessSpocTCEDisplayInfo {
 	// Format DVS, DVM, DVR as links to MAST products
-		dvsLink := formatTessSpocProductLink(record.DVS)
+	dvsLink := formatTessSpocProductLink(record.DVS)
 	dvmLink := formatTessSpocProductLink(record.DVM)
 	dvrLink := formatTessSpocProductLink(record.DVR)
 
@@ -349,11 +372,11 @@ func FormatTessSpocTCEForDisplay(record TCERecord) TessSpocTCEDisplayInfo {
 		""))
 
 	return TessSpocTCEDisplayInfo{
-		ID:          idAbbrev,
-		DVS:          dvsLink,
-		DVM:          dvmLink,
-		DVR:          dvrLink,
-		SectorSpan:   GetSectorsSpan(record.Sectors),
+		ID:         idAbbrev,
+		DVS:        dvsLink,
+		DVM:        dvmLink,
+		DVR:        dvrLink,
+		SectorSpan: GetSectorsSpan(record.Sectors),
 	}
 }
 
@@ -387,7 +410,6 @@ func formatSpocProductLink(filename string) string {
 	}
 	return fmt.Sprintf(`<a target="_blank" href="%s">%s</a>`, ToSpocProductURL(filename), linkText)
 }
-
 
 // formatProductLink formats a product filename as a clickable link to MAST
 func formatTessSpocProductLink(filename string) string {
@@ -452,7 +474,7 @@ func RenderSpocTCETable(records []TCERecord) string {
 		html.WriteString(fmt.Sprintf(`<td class="col5">%.2f</td>`, display.Epoch))
 		html.WriteString(fmt.Sprintf(`<td class="col6">%.4f</td>`, display.Duration))
 		html.WriteString(fmt.Sprintf(`<td class="col7">%.6f</td>`, display.Period))
-		html.WriteString(fmt.Sprintf(`<td class="col8">%.4f</td>`, display.DepthPercent))
+		html.WriteString(fmt.Sprintf(`<td class="col8">%s</td>`, display.DepthPercent))
 		html.WriteString(fmt.Sprintf(`<td class="col9">%.2f</td>`, display.ImpactB))
 		html.WriteString(fmt.Sprintf(`<td class="col10">%s</td>`, display.TICOffset))
 		html.WriteString(fmt.Sprintf(`<td class="col11">%s</td>`, display.OotOffset))
