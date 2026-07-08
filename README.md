@@ -13,16 +13,17 @@ Install the package into your Python environment:
 
 ```shell
 # include the web application
-pip install .[webapp]
+pip install ."[webapp,build_db]"
 
-# Or just the core package
-pip install .
+# Or just the core package:
+# * build_db is needed to create the database.
+pip install ."[build_db]"
 ```
 
 For development: install the package in editable mode:
 
 ```shell
-pip install -e .[dev]
+pip install -e ."[webapp,build_db,dev]"
 ```
 
 Download the required data and build the local database:

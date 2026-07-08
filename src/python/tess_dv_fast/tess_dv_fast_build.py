@@ -8,6 +8,10 @@ from pathlib import Path
 
 import pandas as pd
 
+from .tcestats_utils import (
+    is_odd_even_depth_diff_significant,
+    is_weak_secondary_significant,
+)
 from .tess_dv_fast_spec import (
     DATA_BASE_DIR,
     TCESTATS_DBNAME,
@@ -110,6 +114,8 @@ def _get_dv_products_of_sectors(sectors):
     return res
 
 
+# csv column description (not completely up-to-date):
+# https://archive.stsci.edu/missions/tess/catalogs/tce/TCE_csv_description.txt
 RAW_CSV_COLS = "tceid,ticid,tce_plnt_num,sectors,lastUpdate,tce_period,tce_period_err,tce_time0bt,tce_time0bt_err,tce_time0,tce_time0_err,tce_ror,tce_ror_err,tce_dor,tce_dor_err,tce_incl,tce_incl_err,tce_impact,tce_impact_err,tce_duration,tce_duration_err,tce_ingress,tce_ingress_err,tce_depth,tce_depth_err,tce_eccen,tce_eccen_err,tce_longp,tce_longp_err,tce_limbdark_mod,tce_ldm_coeff1,tce_ldm_coeff2,tce_ldm_coeff3,tce_ldm_coeff4,tce_num_transits,tce_trans_mod,tce_full_conv,tce_model_snr,tce_model_chisq,tce_model_dof,tce_robstat,tce_dof2,tce_chisq2,tce_chisqgofdof,tce_chisqgof,tce_prad,tce_prad_err,tce_sma,tce_sma_err,tce_eqt,tce_eqt_err,tce_insol,tce_insol_err,tce_ntoi,tce_sectors,tce_steff,tce_steff_err,tce_slogg,tce_slogg_err,tce_smet,tce_smet_err,tce_sradius,tce_sradius_err,tce_sdensity,tce_sdensity_err,tce_steff_prov,tce_slogg_prov,tce_smet_prov,tce_sradius_prov,tce_sdensity_prov,tcet_period,tcet_period_err,tcet_time0bt,tcet_time0bt_err,tcet_time0,tcet_time0_err,tcet_duration,tcet_duration_err,tcet_ingress,tcet_ingress_err,tcet_depth,tcet_depth_err,tcet_full_conv,tcet_model_chisq,tcet_model_dof,wst_robstat,wst_depth,tce_ws_mesmedian,tce_ws_mesmad,tce_ws_maxmes,tce_ws_minmes,tce_ws_maxmesd,tce_ws_minmesd,tce_max_sngle_ev,tce_max_mult_ev,tce_bin_oedp_stat,tce_bin_spc_stat,tce_bin_lpc_stat,tce_albedo,tce_albedo_err,tce_ptemp,tce_ptemp_err,tce_albedo_stat,tce_ptemp_stat,boot_fap,boot_mesthresh,boot_mesmean,boot_messtd,bootstrap_transit_count,tce_cap_stat,tce_hap_stat,tce_dicco_mra,tce_dicco_mra_err,tce_dicco_mdec,tce_dicco_mdec_err,tce_dicco_msky,tce_dicco_msky_err,tce_ditco_mra,tce_ditco_mra_err,tce_ditco_mdec,tce_ditco_mdec_err,tce_ditco_msky,tce_ditco_msky_err"
 RAW_CSV_COLS = RAW_CSV_COLS.split(",")
 
@@ -221,9 +227,15 @@ _MIN_DB_COLS = [
     # to generate dvs, dvm, dvr columns
     "tce_plnt_num",
     "sectors",
-    # sellar radius provenance, used to determine if tce_depth is reliable,
+    # stellar radius provenance, used to determine if tce_depth is reliable,
     # by checking if the stellar radius is assumed to be solar or not
     "tce_sradius_prov",
+    # odd-even depth statistics, used to determine if there is
+    # significant depth difference between odd / even transits
+    "tce_bin_oedp_stat",
+    # Weak Secondary maximum MES, used to determine if the weak secondary
+    # is significant (in depth)
+    "tce_ws_maxmes",
 ]
 
 
@@ -247,10 +259,32 @@ def _export_tcestats_as_db(minimal_db=False):
     #   given the large number of columns and mixed data types.
     df = df.copy()
 
-    # create a column to flag if the stellar radius is assumed to be solar or not
+    # BEGIN create columns to flag warnings in UI
+    #
+
+    # - flag if the stellar radius is assumed to be solar or not
     df["tce_sradius_prov_is_solar"] = df["tce_sradius_prov"] == "Solar"
+
+    # - flag if odd-even depth difference is significant
+    df["tce_bin_oedp_stat_is_sig"] = is_odd_even_depth_diff_significant(
+        df["tce_bin_oedp_stat"]
+    )
+
+    # - flag if the weak secondary is possibly significant
+    df["tce_ws_maxmes_is_sig"] = is_weak_secondary_significant(df["tce_ws_maxmes"])
+
     if minimal_db:
-        df.drop(columns=["tce_sradius_prov"], inplace=True)
+        # drop the value columns to save space in minimal config
+        # savings:
+        #   for a db ~338k rows, ~2.5Mb is saved
+        #   after replacing one numeric column with a boolean (0/1)
+        df.drop(
+            columns=["tce_sradius_prov", "tce_bin_oedp_stat", "tce_ws_maxmes"],
+            inplace=True,
+        )
+
+    #
+    # END create columns to flag warnings in UI
 
     if minimal_db:
         # replace dvs / dvm  / dvr columns with a much more compact representation
