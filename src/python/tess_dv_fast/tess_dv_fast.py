@@ -126,6 +126,7 @@ def _add_helpful_columns_to_tcestats(df: pd.DataFrame) -> None:
     df["tce_dicco_msky_sig"] = (
         df["tce_dicco_msky"] / df["tce_dicco_msky_err"]
     )  # OotOffset sig
+
     # Note: model's stellar density, `starDensitySolarDensity` in dvr xml, is not available in csv
 
 
@@ -139,9 +140,26 @@ def _format_Rp(val_str):
     pradius, sradius_is_solar = val_str.split("|")
     pradius = f"{float(pradius):.4f}"
     if sradius_is_solar == "True":
-        return f'<span style="color: red; font-weight: bold;">{pradius}<span>'
+        title = "Assuming the stellar radius is 1 Rsun."
+        return f'<span style="color: red; font-weight: bold;" title="{title}">{pradius}<span>'
     else:
         return pradius
+
+
+def _format_depth(val_str):
+    # val_str is concatenated in the form of <depth_in_pct>|<oedp_is_sig>|<ws_maxmes_is_sig>
+
+    depth_pct, oedp_is_sig, ws_maxmes_is_sig = [float(v) for v in val_str.split("|")]
+    depth_pct = f"{depth_pct:.4f}"
+    if oedp_is_sig or ws_maxmes_is_sig:
+        title = ""
+        if oedp_is_sig:
+            title += "Significant odd-even depth difference. "
+        if ws_maxmes_is_sig:
+            title += "Significant weak secondary. "
+        return f'<span style="color: red; font-weight: bold;" title="{title}">{depth_pct}<span>'
+    else:
+        return depth_pct
 
 
 def display_tce_infos(
@@ -182,6 +200,9 @@ def display_tce_infos(
         }
     )
 
+    # encode multiple values in a column to support conditional formatting
+    # in display
+
     df["TicOffset"] = (
         df["tce_ditco_msky"].astype(str) + "|" + df["tce_ditco_msky_sig"].astype(str)
     )
@@ -190,6 +211,14 @@ def display_tce_infos(
     )
 
     df["Rp"] = df["Rp"].astype(str) + "|" + df["tce_sradius_prov_is_solar"].astype(str)
+
+    df["Depth"] = (
+        df["Depth"].astype(str)
+        + "|"
+        + df["tce_bin_oedp_stat_is_sig"].astype(str)
+        + "|"
+        + df["tce_ws_maxmes_is_sig"].astype(str)
+    )
 
     display_columns = [
         "exomast_id",
@@ -225,7 +254,7 @@ def display_tce_infos(
         "Epoch": "{:.2f}",  # the csv has 2 digits precision
         "Duration": "{:.4f}",
         "Period": "{:.6f}",
-        "Depth": "{:.4f}",
+        "Depth": _format_depth,
         "Impact b": "{:.2f}",
         "TicOffset": format_offset_n_sigma,
         "OotOffset": format_offset_n_sigma,
