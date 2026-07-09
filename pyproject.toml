@@ -23,7 +23,7 @@ dependencies = [
 
 [project.optional-dependencies]
 build_db = [
-  "requests>=2.34.2",
+  "requests>=2.0",
   "scipy",
 ]
 webapp = [
