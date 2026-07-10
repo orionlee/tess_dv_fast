@@ -4,7 +4,7 @@ A Python package / webapp that provides a fast lookup of TESS threshold crossing
 
 For SPOC, it also provides a summary of key TCE parameters, e.g. looking up all the TCEs for [pi Men / TIC 261136679](https://exofop.ipac.caltech.edu/tess/target.php?id=261136679):
 
-![sample lookup result screenshot](assets/screenshot_tce_results.png)
+![sample lookup result screenshot](https://raw.githubusercontent.com/orionlee/tess_dv_fast/main/assets/screenshot_tce_results.png)
 
 
 ## Installation

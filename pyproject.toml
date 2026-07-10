@@ -6,16 +6,17 @@ build-backend = "setuptools.build_meta"
 name = "tess-dv-fast"
 dynamic = ["version"]
 description = "Fast lookup of TESS mission SPOC and TESS-SPOC TCE Data Validation (DV) reports"
-authors=[{name="Sam Lee", email="orionlee@yahoo.comm"}]
+authors=[{name="Sam Lee"}]
 readme = "README.md"
 classifiers = [
+    "Intended Audience :: Science/Research",
     "Programming Language :: Python :: 3",
     "Operating System :: OS Independent",
     "Topic :: Scientific/Engineering :: Astronomy",
 ]
 keywords = ["NASA", "TESS", "Astronomy", "exoplanets"]
 license = "MIT"
-license-files = ["LICEN[CS]E*"]
+license-files = ["LICENSE"]
 requires-python = ">=3.8"
 dependencies = [
   "pandas>=2.0",
