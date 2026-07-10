@@ -13,6 +13,12 @@ __pycache__/
 # poetry lock
 poetry.lock
 
+# for wheel
+dist/
+
+# ruff 
+.ruff_cache/
+
 
 # data files downloaded and the db built
 data/
