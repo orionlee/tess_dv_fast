@@ -1,5 +1,8 @@
 # TESS TCE Data Validation (DV) Reports Fast Lookup
 
+[![PyPI Badge](https://img.shields.io/pypi/v/tess-dv-fast)](https://pypi.org/project/tess-dv-fast/)
+
+
 A Python package / webapp that provides a fast lookup of TESS threshold crossing event (TCE) data validation reports from SPOC (2 minute cadence) pipeline and TESS-SPOC (FFI / HLSP) pipeline.
 
 For SPOC, it also provides a summary of key TCE parameters, e.g. looking up all the TCEs for [pi Men / TIC 261136679](https://exofop.ipac.caltech.edu/tess/target.php?id=261136679):
@@ -13,16 +16,17 @@ Install the package into your Python environment:
 
 ```shell
 # include the web application
-pip install ."[webapp,build_db]"
+pip install tess-dv-fast"[webapp,build_db]"
 
 # Or just the core package:
 # * build_db is needed to create the database.
-pip install ."[build_db]"
+pip install tess-dv-fast"[build_db]"
 ```
 
-For development: install the package in editable mode:
+For development: clone the git repository and install the package in editable mode:
 
 ```shell
+# at project root
 pip install -e ."[webapp,build_db,dev]"
 ```
 
