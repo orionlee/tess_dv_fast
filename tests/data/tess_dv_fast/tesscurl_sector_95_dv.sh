@@ -1,0 +1,26 @@
+#!/bin/sh
+curl -C - -L -o tess2025206194924-s0095-s0095-0000000024695715-01037_dvr.pdf https://mast.stsci.edu/api/v0.1/Download/file/?uri=mast:TESS/product/tess2025206194924-s0095-s0095-0000000024695715-01037_dvr.pdf
+curl -C - -L -o tess2025206194924-s0095-s0095-0000000024695715-01-01037_dvs.pdf https://mast.stsci.edu/api/v0.1/Download/file/?uri=mast:TESS/product/tess2025206194924-s0095-s0095-0000000024695715-01-01037_dvs.pdf
+curl -C - -L -o tess2025206194924-s0095-s0095-0000000024695715-01037_dvr.xml https://mast.stsci.edu/api/v0.1/Download/file/?uri=mast:TESS/product/tess2025206194924-s0095-s0095-0000000024695715-01037_dvr.xml
+curl -C - -L -o tess2025206194924-s0095-s0095-0000000024695715-01037_dvt.fits https://mast.stsci.edu/api/v0.1/Download/file/?uri=mast:TESS/product/tess2025206194924-s0095-s0095-0000000024695715-01037_dvt.fits
+curl -C - -L -o tess2025206194924-s0095-s0095-0000000024695715-01037_dvm.pdf https://mast.stsci.edu/api/v0.1/Download/file/?uri=mast:TESS/product/tess2025206194924-s0095-s0095-0000000024695715-01037_dvm.pdf
+curl -C - -L -o tess2025206194924-s0095-s0095-0000000261136679-01037_dvr.pdf https://mast.stsci.edu/api/v0.1/Download/file/?uri=mast:TESS/product/tess2025206194924-s0095-s0095-0000000261136679-01037_dvr.pdf
+curl -C - -L -o tess2025206194924-s0095-s0095-0000000261136679-01-01037_dvs.pdf https://mast.stsci.edu/api/v0.1/Download/file/?uri=mast:TESS/product/tess2025206194924-s0095-s0095-0000000261136679-01-01037_dvs.pdf
+curl -C - -L -o tess2025206194924-s0095-s0095-0000000261136679-01037_dvr.xml https://mast.stsci.edu/api/v0.1/Download/file/?uri=mast:TESS/product/tess2025206194924-s0095-s0095-0000000261136679-01037_dvr.xml
+curl -C - -L -o tess2025206194924-s0095-s0095-0000000261136679-01037_dvt.fits https://mast.stsci.edu/api/v0.1/Download/file/?uri=mast:TESS/product/tess2025206194924-s0095-s0095-0000000261136679-01037_dvt.fits
+curl -C - -L -o tess2025206194924-s0095-s0095-0000000261136679-01037_dvm.pdf https://mast.stsci.edu/api/v0.1/Download/file/?uri=mast:TESS/product/tess2025206194924-s0095-s0095-0000000261136679-01037_dvm.pdf
+curl -C - -L -o tess2025206194924-s0095-s0095-0000002028269846-01037_dvr.pdf https://mast.stsci.edu/api/v0.1/Download/file/?uri=mast:TESS/product/tess2025206194924-s0095-s0095-0000002028269846-01037_dvr.pdf
+curl -C - -L -o tess2025206194924-s0095-s0095-0000002028269846-01-01037_dvs.pdf https://mast.stsci.edu/api/v0.1/Download/file/?uri=mast:TESS/product/tess2025206194924-s0095-s0095-0000002028269846-01-01037_dvs.pdf
+curl -C - -L -o tess2025206194924-s0095-s0095-0000002028269846-01037_dvr.xml https://mast.stsci.edu/api/v0.1/Download/file/?uri=mast:TESS/product/tess2025206194924-s0095-s0095-0000002028269846-01037_dvr.xml
+curl -C - -L -o tess2025206194924-s0095-s0095-0000002028269846-01037_dvt.fits https://mast.stsci.edu/api/v0.1/Download/file/?uri=mast:TESS/product/tess2025206194924-s0095-s0095-0000002028269846-01037_dvt.fits
+curl -C - -L -o tess2025206194924-s0095-s0095-0000002028269846-01037_dvm.pdf https://mast.stsci.edu/api/v0.1/Download/file/?uri=mast:TESS/product/tess2025206194924-s0095-s0095-0000002028269846-01037_dvm.pdf
+curl -C - -L -o tess2025206194924-s0095-s0095-0000002028583684-01037_dvr.pdf https://mast.stsci.edu/api/v0.1/Download/file/?uri=mast:TESS/product/tess2025206194924-s0095-s0095-0000002028583684-01037_dvr.pdf
+curl -C - -L -o tess2025206194924-s0095-s0095-0000002028583684-01-01037_dvs.pdf https://mast.stsci.edu/api/v0.1/Download/file/?uri=mast:TESS/product/tess2025206194924-s0095-s0095-0000002028583684-01-01037_dvs.pdf
+curl -C - -L -o tess2025206194924-s0095-s0095-0000002028583684-01037_dvr.xml https://mast.stsci.edu/api/v0.1/Download/file/?uri=mast:TESS/product/tess2025206194924-s0095-s0095-0000002028583684-01037_dvr.xml
+curl -C - -L -o tess2025206194924-s0095-s0095-0000002028583684-01037_dvt.fits https://mast.stsci.edu/api/v0.1/Download/file/?uri=mast:TESS/product/tess2025206194924-s0095-s0095-0000002028583684-01037_dvt.fits
+curl -C - -L -o tess2025206194924-s0095-s0095-0000002028583684-01037_dvm.pdf https://mast.stsci.edu/api/v0.1/Download/file/?uri=mast:TESS/product/tess2025206194924-s0095-s0095-0000002028583684-01037_dvm.pdf
+curl -C - -L -o tess2025206194924-s0095-s0095-0000002028631543-01037_dvr.pdf https://mast.stsci.edu/api/v0.1/Download/file/?uri=mast:TESS/product/tess2025206194924-s0095-s0095-0000002028631543-01037_dvr.pdf
+curl -C - -L -o tess2025206194924-s0095-s0095-0000002028631543-01-01037_dvs.pdf https://mast.stsci.edu/api/v0.1/Download/file/?uri=mast:TESS/product/tess2025206194924-s0095-s0095-0000002028631543-01-01037_dvs.pdf
+curl -C - -L -o tess2025206194924-s0095-s0095-0000002028631543-01037_dvr.xml https://mast.stsci.edu/api/v0.1/Download/file/?uri=mast:TESS/product/tess2025206194924-s0095-s0095-0000002028631543-01037_dvr.xml
+curl -C - -L -o tess2025206194924-s0095-s0095-0000002028631543-01037_dvt.fits https://mast.stsci.edu/api/v0.1/Download/file/?uri=mast:TESS/product/tess2025206194924-s0095-s0095-0000002028631543-01037_dvt.fits
+curl -C - -L -o tess2025206194924-s0095-s0095-0000002028631543-01037_dvm.pdf https://mast.stsci.edu/api/v0.1/Download/file/?uri=mast:TESS/product/tess2025206194924-s0095-s0095-0000002028631543-01037_dvm.pdf

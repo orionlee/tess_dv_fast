@@ -16,12 +16,18 @@ poetry.lock
 # for wheel
 dist/
 
-# ruff 
+# ruff
 .ruff_cache/
 
-
 # data files downloaded and the db built
-data/
+# (do not ignore tests/data/ , which has some custom data files for tests)
+/data/
+src/go/data/
+
+# tests/data contains custom csv / sh,
+# but the combined master .csv / .db are still generated and to be tested
+tests/data/tess_dv_fast/tess_tcestats.*
+
 
 # for gcloud, etc.
 build/
