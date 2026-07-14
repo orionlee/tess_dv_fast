@@ -116,30 +116,64 @@ def _get_dv_products_of_sectors(sectors):
 
 # csv column description (not completely up-to-date):
 # https://archive.stsci.edu/missions/tess/catalogs/tce/TCE_csv_description.txt
-RAW_CSV_COLS = "tceid,ticid,tce_plnt_num,sectors,lastUpdate,tce_period,tce_period_err,tce_time0bt,tce_time0bt_err,tce_time0,tce_time0_err,tce_ror,tce_ror_err,tce_dor,tce_dor_err,tce_incl,tce_incl_err,tce_impact,tce_impact_err,tce_duration,tce_duration_err,tce_ingress,tce_ingress_err,tce_depth,tce_depth_err,tce_eccen,tce_eccen_err,tce_longp,tce_longp_err,tce_limbdark_mod,tce_ldm_coeff1,tce_ldm_coeff2,tce_ldm_coeff3,tce_ldm_coeff4,tce_num_transits,tce_trans_mod,tce_full_conv,tce_model_snr,tce_model_chisq,tce_model_dof,tce_robstat,tce_dof2,tce_chisq2,tce_chisqgofdof,tce_chisqgof,tce_prad,tce_prad_err,tce_sma,tce_sma_err,tce_eqt,tce_eqt_err,tce_insol,tce_insol_err,tce_ntoi,tce_sectors,tce_steff,tce_steff_err,tce_slogg,tce_slogg_err,tce_smet,tce_smet_err,tce_sradius,tce_sradius_err,tce_sdensity,tce_sdensity_err,tce_steff_prov,tce_slogg_prov,tce_smet_prov,tce_sradius_prov,tce_sdensity_prov,tcet_period,tcet_period_err,tcet_time0bt,tcet_time0bt_err,tcet_time0,tcet_time0_err,tcet_duration,tcet_duration_err,tcet_ingress,tcet_ingress_err,tcet_depth,tcet_depth_err,tcet_full_conv,tcet_model_chisq,tcet_model_dof,wst_robstat,wst_depth,tce_ws_mesmedian,tce_ws_mesmad,tce_ws_maxmes,tce_ws_minmes,tce_ws_maxmesd,tce_ws_minmesd,tce_max_sngle_ev,tce_max_mult_ev,tce_bin_oedp_stat,tce_bin_spc_stat,tce_bin_lpc_stat,tce_albedo,tce_albedo_err,tce_ptemp,tce_ptemp_err,tce_albedo_stat,tce_ptemp_stat,boot_fap,boot_mesthresh,boot_mesmean,boot_messtd,bootstrap_transit_count,tce_cap_stat,tce_hap_stat,tce_dicco_mra,tce_dicco_mra_err,tce_dicco_mdec,tce_dicco_mdec_err,tce_dicco_msky,tce_dicco_msky_err,tce_ditco_mra,tce_ditco_mra_err,tce_ditco_mdec,tce_ditco_mdec_err,tce_ditco_msky,tce_ditco_msky_err"
-RAW_CSV_COLS = RAW_CSV_COLS.split(",")
+RAW_CSV_COLS_V1 = "tceid,ticid,tce_plnt_num,sectors,lastUpdate,tce_period,tce_period_err,tce_time0bt,tce_time0bt_err,tce_time0,tce_time0_err,tce_ror,tce_ror_err,tce_dor,tce_dor_err,tce_incl,tce_incl_err,tce_impact,tce_impact_err,tce_duration,tce_duration_err,tce_ingress,tce_ingress_err,tce_depth,tce_depth_err,tce_eccen,tce_eccen_err,tce_longp,tce_longp_err,tce_limbdark_mod,tce_ldm_coeff1,tce_ldm_coeff2,tce_ldm_coeff3,tce_ldm_coeff4,tce_num_transits,tce_trans_mod,tce_full_conv,tce_model_snr,tce_model_chisq,tce_model_dof,tce_robstat,tce_dof2,tce_chisq2,tce_chisqgofdof,tce_chisqgof,tce_prad,tce_prad_err,tce_sma,tce_sma_err,tce_eqt,tce_eqt_err,tce_insol,tce_insol_err,tce_ntoi,tce_sectors,tce_steff,tce_steff_err,tce_slogg,tce_slogg_err,tce_smet,tce_smet_err,tce_sradius,tce_sradius_err,tce_sdensity,tce_sdensity_err,tce_steff_prov,tce_slogg_prov,tce_smet_prov,tce_sradius_prov,tce_sdensity_prov,tcet_period,tcet_period_err,tcet_time0bt,tcet_time0bt_err,tcet_time0,tcet_time0_err,tcet_duration,tcet_duration_err,tcet_ingress,tcet_ingress_err,tcet_depth,tcet_depth_err,tcet_full_conv,tcet_model_chisq,tcet_model_dof,wst_robstat,wst_depth,tce_ws_mesmedian,tce_ws_mesmad,tce_ws_maxmes,tce_ws_minmes,tce_ws_maxmesd,tce_ws_minmesd,tce_max_sngle_ev,tce_max_mult_ev,tce_bin_oedp_stat,tce_bin_spc_stat,tce_bin_lpc_stat,tce_albedo,tce_albedo_err,tce_ptemp,tce_ptemp_err,tce_albedo_stat,tce_ptemp_stat,boot_fap,boot_mesthresh,boot_mesmean,boot_messtd,bootstrap_transit_count,tce_cap_stat,tce_hap_stat,tce_dicco_mra,tce_dicco_mra_err,tce_dicco_mdec,tce_dicco_mdec_err,tce_dicco_msky,tce_dicco_msky_err,tce_ditco_mra,tce_ditco_mra_err,tce_ditco_mdec,tce_ditco_mdec_err,tce_ditco_msky,tce_ditco_msky_err"
+
+#
+# new columns for TicOffset from joint difference imaging,
+# starting from s0001-s0092 (the columns also present in the newer single-sector CSVs starting s0095, but has no useful value)
+RAW_CSV_COLS_V2_EXTRAS = "tce_ditco_jra,tce_ditco_jra_err,tce_ditco_jdec,tce_ditco_jdec_err,tce_ditco_jsky,tce_ditco_jsky_err"
+RAW_CSV_COLS_V2_EXTRAS_PLACEHOLDER_VALS = [0.0, -1.0, 0.0, -1.0, 0.0, -1.0]  # placeholder values for the old CSVs
+
+RAW_CSV_COLS_V2 = RAW_CSV_COLS_V1 + f",{RAW_CSV_COLS_V2_EXTRAS}"
+
+RAW_CSV_COLS_V1 = RAW_CSV_COLS_V1.split(",")
+RAW_CSV_COLS_V2_EXTRAS = RAW_CSV_COLS_V2_EXTRAS.split(",")
+RAW_CSV_COLS_V2 = RAW_CSV_COLS_V2.split(",")
+
+def _read_raw_sector_tcestats_csv(filepath):
+    """Read the raw/original (sector-level) tcestats CSVs downloaded from MAST"""
+    def _do_read(usecols):
+        df = pd.read_csv(
+            filepath,
+            comment="#",
+            # additional columns starting from s0095 / s0001-s0092
+            # to get around the complication in the appended csv
+            # use a fixed set of columns (from sector 1 csv)
+            usecols=usecols,
+        )
+
+        if len(df.columns) != len(usecols):
+            raise ValueError(
+                (
+                    f"sector csv read is expected to have {len(usecols)} columns, actual={len(df.columns)}"
+                    f"\n{df.columns}"
+                )
+            )
+        df = df.copy()  # to avoid PerformanceWarning: DataFrame is highly fragmented in subsequent calls
+        return df
+
+    try:
+        df = _do_read(RAW_CSV_COLS_V2)
+        # for the new columns, some re-delivered old sectors, e.g., s0015-s0015, they have the columns, but have no values
+        # fill them with the placeholder values (found in the recent CSVs, e.g., s0095-s0095) for uniformity
+        # and ease of processing down the road
+        fill_values = {col: val for col, val in zip(RAW_CSV_COLS_V2_EXTRAS, RAW_CSV_COLS_V2_EXTRAS_PLACEHOLDER_VALS)}
+        df.fillna(value=fill_values, inplace=True)
+        return df
+    except ValueError:
+        # for the cases of older CSVs with fewer columns
+        # ValueError: Usecols do not match columns, columns expected but not found: ...
+        df = _do_read(RAW_CSV_COLS_V1)
+        # add the missing columns so that the csv look like the new ones (V@)
+        df[RAW_CSV_COLS_V2_EXTRAS] = RAW_CSV_COLS_V2_EXTRAS_PLACEHOLDER_VALS
+        return df
 
 
 def _append_to_tcestats_csv(filepath, sectors_val, dest):
     print(f"DEBUG appending to master tcestats csv from: {filepath}")
 
     # base tcestats csv of a sector
-    df = pd.read_csv(
-        filepath,
-        comment="#",
-        # additional columns starting from s0095 / s0001-s0092
-        # to get around the complication in the appended csv
-        # use a fixed set of columns (from sector 1 csv)
-        usecols=RAW_CSV_COLS,
-    )
-
-    if len(df.columns) != len(RAW_CSV_COLS):
-        raise ValueError(
-            (
-                f"sector csv read is expected to have {len(RAW_CSV_COLS)} columns, actual={len(df.columns)}"
-                f"\n{df.columns}"
-            )
-        )
+    df = _read_raw_sector_tcestats_csv(filepath)
 
     # replace sectors column with a uniform format, e.g., s0002-s0002
     # that describes the actual range for both single sector and multi sector csvs
@@ -216,6 +250,9 @@ _MIN_DB_COLS = [
     # for deriving "TicOffset"
     "tce_ditco_msky",
     "tce_ditco_msky_err",
+    # TIcOffset from joint difference image
+    "tce_ditco_jsky",
+    "tce_ditco_jsky_err",
     # for deriving "OotOffset",
     "tce_dicco_msky",
     "tce_dicco_msky_err",

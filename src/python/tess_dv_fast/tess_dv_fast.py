@@ -123,6 +123,9 @@ def _add_helpful_columns_to_tcestats(df: pd.DataFrame) -> None:
     df["tce_ditco_msky_sig"] = (
         df["tce_ditco_msky"] / df["tce_ditco_msky_err"]
     )  # TicOffset sig
+    df["tce_ditco_jsky_sig"] = (
+        df["tce_ditco_jsky"] / df["tce_ditco_jsky_err"]
+    )  # TicOffset (joint difference image) sig
     df["tce_dicco_msky_sig"] = (
         df["tce_dicco_msky"] / df["tce_dicco_msky_err"]
     )  # OotOffset sig
@@ -160,6 +163,15 @@ def _format_depth(val_str):
         return f'<span style="color: red; font-weight: bold;" title="{title}">{depth_pct}<span>'
     else:
         return depth_pct
+
+
+def _encode_tic_offset_str(r):
+    # for no ditco_jsky cases, the err is -1.0 in the CSVs
+    if r["tce_ditco_jsky_err"] < 0:
+        # case no TicOffset-jnt (or it's genuinely N/A)
+        return f"""{r["tce_ditco_msky"]}|{r["tce_ditco_msky_sig"]}"""
+    else:
+        return f"""{r["tce_ditco_jsky"]}|{r["tce_ditco_jsky_sig"]}"""
 
 
 def display_tce_infos(
@@ -225,9 +237,7 @@ def display_tce_infos(
     # encode multiple values in a column to support conditional formatting
     # in display
 
-    df["TicOffset"] = (
-        df["tce_ditco_msky"].astype(str) + "|" + df["tce_ditco_msky_sig"].astype(str)
-    )
+    df["TicOffset"] = [_encode_tic_offset_str(r) for _, r in df.iterrows()]
     df["OotOffset"] = (
         df["tce_dicco_msky"].astype(str) + "|" + df["tce_dicco_msky_sig"].astype(str)
     )

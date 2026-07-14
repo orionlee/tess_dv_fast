@@ -1,3 +1,7 @@
+0.11.0.dev
+=====================
+- Used TicOffset from joint difference imaging if available.
+
 0.10.0.post20260710
 =====================
 - Added warnings (depth displayed in red) when there are signficant odd-even
