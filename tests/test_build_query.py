@@ -1,7 +1,7 @@
 from pathlib import Path
 from importlib import reload
 
-from numpy.testing import assert_equal
+from numpy.testing import assert_equal, assert_almost_equal
 import pytest
 
 from tess_dv_fast import tess_dv_fast_spec, tess_dv_fast_build, tess_dv_fast
@@ -66,3 +66,13 @@ def test_build_query(minimal_db):
 
     # 1 TCE for each single sector, 2 TCEs for each multi-sector
     assert_equal(len(df), 6, "expected number of TCEs for pi Men in test data")
+
+    _df = df[df["exomast_id"] == "TIC261136679S0001S0096TCE1"]
+
+    expected_TicOffset_rm = 20.8
+    assert_almost_equal(_df["tce_ditco_msky"].iloc[0], expected_TicOffset_rm, decimal=1)
+
+    _df_display = tess_dv_fast.display_tce_infos(_df, return_as="df")
+    # the value to be displayed (it's encoded as a <offset>|<offset_error> string)
+    actual_TicOffset = float(_df_display["TicOffset"].iloc[0].split('|')[0])
+    assert_almost_equal(actual_TicOffset, expected_TicOffset_rm, decimal=1)

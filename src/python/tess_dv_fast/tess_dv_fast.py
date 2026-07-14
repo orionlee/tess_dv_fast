@@ -166,12 +166,34 @@ def display_tce_infos(
     df: pd.DataFrame,
     return_as: Optional[str] = None,
     no_tce_html: Optional[str] = "",
-) -> Optional[Union[str, None]]:
+) -> Optional[Union[str, pd.DataFrame, None]]:
+    display_columns = [
+        "exomast_id",
+        # "ticid",
+        # "tce_plnt_num",
+        # "sectors",
+        # "tce_num_sectors",
+        "dvs",
+        "dvm",
+        "dvr",
+        "Rp",
+        "Epoch",
+        "Duration",
+        "Period",
+        "Depth",
+        "Impact b",
+        "TicOffset",
+        "OotOffset",
+        "Codes",
+    ]
+
     if df is None or len(df) < 1:
         if return_as is None:
             from IPython.display import HTML, display
 
             return display(HTML(no_tce_html))
+        elif return_as == "df":
+            return pd.DataFrame(columns=display_columns)
         elif return_as == "html":
             return no_tce_html
 
@@ -220,26 +242,6 @@ def display_tce_infos(
         + df["tce_ws_maxmes_is_sig"].astype(str)
     )
 
-    display_columns = [
-        "exomast_id",
-        # "ticid",
-        # "tce_plnt_num",
-        # "sectors",
-        # "tce_num_sectors",
-        "dvs",
-        "dvm",
-        "dvr",
-        "Rp",
-        "Epoch",
-        "Duration",
-        "Period",
-        "Depth",
-        "Impact b",
-        "TicOffset",
-        "OotOffset",
-        "Codes",
-    ]
-
     if len(df["ticid"].unique()) > 1:
         # case multiple TICs in the result
         # prepend ticid to the columns to be displayed to differentiate between them
@@ -264,11 +266,14 @@ def display_tce_infos(
     with pd.option_context(
         "display.max_colwidth", None, "display.max_rows", 999, "display.max_columns", 99
     ):
-        styler = df[display_columns].style.format(format_specs).hide(axis="index")
+        df_display = df[display_columns]
+        styler = df_display.style.format(format_specs).hide(axis="index")
         html = add_html_column_units(styler.to_html())
         if return_as is None:
             from IPython.display import HTML, display
 
             return display(HTML(html))
+        elif return_as == "df":
+            return df_display
         elif return_as == "html":
             return html
