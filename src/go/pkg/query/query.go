@@ -33,6 +33,8 @@ type TCERecord struct {
 	TCEWsMaxMESIsSig      bool
 	TCEDitcoMsky          float64
 	TCEDitcoMskyErr       float64
+	TCEDitcoJsky          float64 // TicOffset from joint difference images in multi-sector TCEs from s0001-s0092
+	TCEDitcoJskyErr       float64
 	TCEDiccoMsky          float64
 	TCEDiccoMskyErr       float64
 }
@@ -74,7 +76,7 @@ func GetTCEInfosOfTIC(tic int64) ([]TCERecord, error) {
 	}
 	defer db.Close()
 
-	rows, err := db.Query("SELECT ticid, exomast_id, sectors, tce_plnt_num, dvs, dvm, dvr, tce_depth, tce_period, tce_time0bt, tce_duration, tce_prad, tce_impact, tce_sradius_prov_is_solar, tce_bin_oedp_stat_is_sig, tce_ws_maxmes_is_sig, tce_ditco_msky, tce_ditco_msky_err, tce_dicco_msky, tce_dicco_msky_err FROM tess_tcestats WHERE ticid = ?", tic)
+	rows, err := db.Query("SELECT ticid, exomast_id, sectors, tce_plnt_num, dvs, dvm, dvr, tce_depth, tce_period, tce_time0bt, tce_duration, tce_prad, tce_impact, tce_sradius_prov_is_solar, tce_bin_oedp_stat_is_sig, tce_ws_maxmes_is_sig, tce_ditco_msky, tce_ditco_msky_err, tce_ditco_jsky, tce_ditco_jsky_err, tce_dicco_msky, tce_dicco_msky_err FROM tess_tcestats WHERE ticid = ?", tic)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query database: %w", err)
 	}
@@ -102,6 +104,8 @@ func GetTCEInfosOfTIC(tic int64) ([]TCERecord, error) {
 			&r.TCEWsMaxMESIsSig,
 			&r.TCEDitcoMsky,
 			&r.TCEDitcoMskyErr,
+			&r.TCEDitcoJsky,
+			&r.TCEDitcoJskyErr,
 			&r.TCEDiccoMsky,
 			&r.TCEDiccoMskyErr,
 		); err != nil {
@@ -327,10 +331,20 @@ func formatDepth(depthPct float64, isSigTCEBinOedpStat bool, isSigTCEWsMaxMES bo
 func FormatSpocTCEForDisplay(record TCERecord) SpocTCEDisplayInfo {
 	pRadiusJupiter := record.TCEPRad * common.REarthToRJupiter
 	depthPct := record.TCEDepth / 10000.0
-	ditcoSig := 0.0
-	if record.TCEDitcoMskyErr != 0 {
-		ditcoSig = record.TCEDitcoMsky / record.TCEDitcoMskyErr
+
+	// TicOffset (ditco): use Jsky if available, Msky otherwise
+	ditcoArcsec := record.TCEDitcoJsky
+	ditcoErr := record.TCEDitcoJskyErr
+	if record.TCEDitcoJskyErr < 0 { // no value is encoded as -1.0
+		ditcoArcsec = record.TCEDitcoMsky
+		ditcoErr = record.TCEDitcoMskyErr
 	}
+	ditcoSig := 0.0
+	if ditcoErr != 0 {
+		ditcoSig = ditcoArcsec / ditcoErr
+	}
+
+	// OotOffset (dicco) significance
 	diccoSig := 0.0
 	if record.TCEDiccoMskyErr != 0 {
 		diccoSig = record.TCEDiccoMsky / record.TCEDiccoMskyErr
@@ -346,7 +360,7 @@ func FormatSpocTCEForDisplay(record TCERecord) SpocTCEDisplayInfo {
 		DVS:          dvsLink,
 		DVM:          dvmLink,
 		DVR:          dvrLink,
-		TICOffset:    common.FormatOffsetNSigma(fmt.Sprintf("%.1f|%.1f", record.TCEDitcoMsky, ditcoSig)),
+		TICOffset:    common.FormatOffsetNSigma(fmt.Sprintf("%.1f|%.1f", ditcoArcsec, ditcoSig)),
 		OotOffset:    common.FormatOffsetNSigma(fmt.Sprintf("%.1f|%.1f", record.TCEDiccoMsky, diccoSig)),
 		Codes:        formatCodesAsInput(generateCodes(record)),
 		Period:       record.TCEPeriod,
