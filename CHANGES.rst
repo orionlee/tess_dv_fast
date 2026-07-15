@@ -1,3 +1,7 @@
+0.11.0.post20260715
+=====================
+- data: include SPOC s104
+
 0.11.0.post20260710
 =====================
 - Used TicOffset from joint difference imaging if available.

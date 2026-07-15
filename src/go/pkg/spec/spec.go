@@ -39,7 +39,7 @@ type HighWatermarks struct {
 // TCE stats CSV sources (single sector)
 var TCEStatsSingleSectorSources = []string{
 	// ... (truncated, only the latest one is here)
-	"https://archive.stsci.edu/missions/tess/catalogs/tce/tess2026111123513-s0103-s0103_dvr-tcestats.csv",
+	"https://archive.stsci.edu/missions/tess/catalogs/tce/tess2026138015512-s0104-s0104_dvr-tcestats.csv",
 }
 
 // TCE stats CSV sources (multi sector)
