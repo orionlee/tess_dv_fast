@@ -1,4 +1,4 @@
-0.11.0.dev
+0.11.0.post20260710
 =====================
 - Used TicOffset from joint difference imaging if available.
 
