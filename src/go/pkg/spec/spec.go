@@ -39,7 +39,7 @@ type HighWatermarks struct {
 // TCE stats CSV sources (single sector)
 var TCEStatsSingleSectorSources = []string{
 	// ... (truncated, only the latest one is here)
-	"https://archive.stsci.edu/missions/tess/catalogs/tce/tess2026138015512-s0104-s0104_dvr-tcestats.csv",
+	"https://archive.stsci.edu/missions/tess/catalogs/tce/tess2026164215111-s0105-s0105_dvr-tcestats.csv",
 }
 
 // TCE stats CSV sources (multi sector)
@@ -51,7 +51,7 @@ var TCEStatsMultiSectorSources = []string{
 // TESS-SPOC TCE sources
 var TessSpocSingleSectorSources = []string{
 	// ... (truncated, only the latest ones are here)
-	"https://archive.stsci.edu/hlsps/tess-spoc/download_scripts/hlsp_tess-spoc_tess_phot_s0084_tess_v1_dl-dv.sh",
+	"https://archive.stsci.edu/hlsps/tess-spoc/download_scripts/hlsp_tess-spoc_tess_phot_s0085_tess_v1_dl-dv.sh",
 }
 
 // TESS-SPOC TCE sources, multi-sector

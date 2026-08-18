@@ -1,3 +1,7 @@
+0.11.0.post20260818
+=====================
+- data: include SPOC s105, TESS-SPOC s85
+
 0.11.0.post20260715
 =====================
 - data: include SPOC s104
