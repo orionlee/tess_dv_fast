@@ -237,6 +237,37 @@ def download_all_data(minimal_db=False, extract_source_urls=True):
     _export_tcestats_as_db(minimal_db)
 
 
+def _get_high_watermarks_from_spec():
+    """Derive high watermarks from source URL specs."""
+    latest_single_sector_url = spec.sources_tcestats_single_sector[-1]
+    latest_single_sector_match = re.search(
+        r"(s\d+)_dvr-tcestats", latest_single_sector_url
+    )
+    if latest_single_sector_match is not None:
+        latest_single_sector = latest_single_sector_match[1]
+
+    latest_multi_sector_url = spec.sources_tcestats_multi_sector[-1]
+    latest_multi_sector_match = re.search(
+        r"(s\d+-s\d+)_dvr-tcestats", latest_multi_sector_url
+    )
+    if latest_multi_sector_match is not None:
+        latest_multi_sector = latest_multi_sector_match[1]
+
+    return dict(single_sector=latest_single_sector, multi_sector=latest_multi_sector)
+
+
+def _save_high_watermarks_to_db(con):
+    # save sector sector high watermarks to a table in the DB for use at query time
+    # - this is necessary the sector source URLs are no longer hardcoded in tess_dv_fast_spec.
+    #   so the high watermarks need to be persisted.
+    high_watermarks = _get_high_watermarks_from_spec()
+    cursor = con.cursor()
+    cursor.execute("create table high_watermarks(key text, value text);")
+    for k, v in high_watermarks.items():
+        cursor.execute("insert into high_watermarks (key, value) values (?, ?);", (k, v))
+    cursor.close()
+
+
 # minimal list of columns in db in order to support display_tce_infos
 # the resulting db is about 30% of the full db
 _MIN_DB_COLS = [
@@ -366,6 +397,8 @@ ADD COLUMN dvr GENERATED ALWAYS AS
 ('tess' || _dv_date_time || '-' || sectors || '-' || substr('0000000000000000'|| ticid, -16, 16)  || '-' ||  substr('00000' || _dv_pin, -5, 5) || '_dvr.pdf');
             """)
             cursor.close()
+
+        _save_high_watermarks_to_db(con)
 
         con.commit()
     finally:

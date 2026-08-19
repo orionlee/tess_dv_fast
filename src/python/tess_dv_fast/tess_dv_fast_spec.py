@@ -102,21 +102,3 @@ def extract_and_save_source_urls_to_file():
     source_urls_cfg = extract_source_urls_from_mast()
     with open(f"{DATA_BASE_DIR}/{SOURCE_URLS_FILENAME}", "w", encoding="utf-8") as dest:
         json.dump(source_urls_cfg, dest, indent=4)
-
-
-def get_high_watermarks():
-    latest_single_sector_url = sources_tcestats_single_sector[-1]
-    latest_single_sector_match = re.search(
-        r"(s\d+)_dvr-tcestats", latest_single_sector_url
-    )
-    if latest_single_sector_match is not None:
-        latest_single_sector = latest_single_sector_match[1]
-
-    latest_multi_sector_url = sources_tcestats_multi_sector[-1]
-    latest_multi_sector_match = re.search(
-        r"(s\d+-s\d+)_dvr-tcestats", latest_multi_sector_url
-    )
-    if latest_multi_sector_match is not None:
-        latest_multi_sector = latest_multi_sector_match[1]
-
-    return dict(single_sector=latest_single_sector, multi_sector=latest_multi_sector)

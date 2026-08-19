@@ -3,7 +3,9 @@ Fast Lookup of SPOC TCEs from TESS mission.
 
 https://archive.stsci.edu/missions-and-data/tess
 """
+from __future__ import annotations
 
+from functools import cache
 import re
 import sqlite3
 from typing import Callable, Optional, Union
@@ -32,9 +34,12 @@ def read_tcestats_csv(**kwargs) -> pd.DataFrame:
     return pd.read_csv(csv_path, comment="#", dtype={"tce_sectors": str}, **kwargs)
 
 
+def _db_uri():
+    return f"file:{DATA_BASE_DIR}/{TCESTATS_DBNAME}?mode=ro"  # read-only
+
+
 def _query_tcestats_from_db(sql: str, **kwargs) -> pd.DataFrame:
-    db_uri = f"file:{DATA_BASE_DIR}/{TCESTATS_DBNAME}?mode=ro"  # read-only
-    with sqlite3.connect(db_uri, uri=True) as con:
+    with sqlite3.connect(_db_uri(), uri=True) as con:
         # convert the 0/1 value in column `tce_sradius_prov_is_solar` to bool
         df = pd.read_sql(sql, con, dtype={"tce_sradius_prov_is_solar": bool}, **kwargs)
         # to avoid "PerformanceWarning: DataFrame is highly fragmented."
@@ -287,3 +292,17 @@ def display_tce_infos(
             return df_display
         elif return_as == "html":
             return html
+
+
+
+@cache
+def get_high_watermarks() -> dict[str, str]:
+    with sqlite3.connect(_db_uri(), uri=True) as con:
+        cursor = con.cursor()
+        res = cursor.execute("select key, value from high_watermarks")
+        high_watermarks_table = res.fetchall()
+        high_watermarks_dict = {}
+        for row in high_watermarks_table:
+            high_watermarks_dict[row[0]] = row[1]
+        cursor.close()
+    return high_watermarks_dict

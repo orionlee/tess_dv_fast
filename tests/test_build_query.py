@@ -72,3 +72,8 @@ def test_build_query(minimal_db):
     # use  s0001-s0001
     _df = df[df["exomast_id"] == "TIC261136679S0001S0001TCE1"]
     assert_tic_offsets(_df, 40.5, 0.0, 40.5)  # no TicOffset-jnt in single sector
+
+    # test high_watermarks
+    high_watermarks_expected = {'single_sector': 's0095', 'multi_sector': 's0001-s0096'}
+    high_watermarks_actual = tess_dv_fast.get_high_watermarks()
+    assert_equal(high_watermarks_actual, high_watermarks_expected, "expected high watermarks")
