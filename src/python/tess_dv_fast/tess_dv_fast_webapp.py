@@ -8,7 +8,6 @@ from markupsafe import escape
 
 from . import tess_dv_fast  # standard SPOC TCEs
 from . import tess_spoc_dv_fast  # HLSP TESS-SPOC TCEs
-from . import tess_spoc_dv_fast_spec
 
 
 app = Flask(__name__)
@@ -64,7 +63,7 @@ def _render_home():
         </form>
 """
     spoc_high_watermarks = tess_dv_fast.get_high_watermarks()
-    tess_spoc_high_watermarks = tess_spoc_dv_fast_spec.get_high_watermarks()
+    tess_spoc_high_watermarks = tess_spoc_dv_fast.get_high_watermarks()
     return (
         most_of_html
         + f"""

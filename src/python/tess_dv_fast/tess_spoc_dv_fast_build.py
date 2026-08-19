@@ -12,9 +12,9 @@ from .tess_spoc_dv_fast_spec import (
     DATA_BASE_DIR,
     TCESTATS_FILENAME,
     TCESTATS_DBNAME,
-    sources_dv_sh_single_sector,
-    sources_dv_sh_multi_sector,
 )
+
+from . import tess_spoc_dv_fast_spec as spec
 
 
 def _filename(url):
@@ -82,7 +82,7 @@ def _append_to_tcestats_csv(sectors_val, dest):
     df.to_csv(dest, index=False, header=write_header, mode="a")
 
 
-def download_all_data():
+def download_all_data(extract_source_urls=True):
     """Download all relevant data locally."""
     from . import download_utils
 
@@ -97,10 +97,15 @@ def download_all_data():
         if match is not None:
             return match[1]
 
+    # web-scrape the listing pages to get the list of URLs, save locally
+    if extract_source_urls:
+        spec.extract_and_save_source_urls_to_file()
+    # else for cases the urls have been extracted and saved in the local json config file
+
     # dv products download scripts (for urls to the products)
     # - they need to be first downloaded: as creating master csv below relies on the scripts
     filename_list = []
-    for url in sources_dv_sh_single_sector + sources_dv_sh_multi_sector:
+    for url in spec.sources_dv_sh_single_sector + spec.sources_dv_sh_multi_sector:
         filename = _filename(url)
         filepath, is_cache_used = download_utils.download_file(
             url,
@@ -128,6 +133,33 @@ def download_all_data():
     _export_tcestats_as_db()
 
 
+def _get_high_watermarks_from_spec():
+    """Derive high watermarks from source URL specs."""
+    latest_single_sector_url = spec.sources_dv_sh_single_sector[-1]
+    latest_single_sector_match = re.search(r"(s\d+)", latest_single_sector_url)
+    if latest_single_sector_match is not None:
+        latest_single_sector = latest_single_sector_match[1]
+
+    latest_multi_sector_url = spec.sources_dv_sh_multi_sector[-1]
+    latest_multi_sector_match = re.search(r"(s\d+-s\d+)", latest_multi_sector_url)
+    if latest_multi_sector_match is not None:
+        latest_multi_sector = latest_multi_sector_match[1]
+
+    return dict(single_sector=latest_single_sector, multi_sector=latest_multi_sector)
+
+
+def _save_high_watermarks_to_db(con):
+    # save sector sector high watermarks to a table in the DB for use at query time
+    # - this is necessary the sector source URLs are no longer hardcoded in tess_dv_fast_spec.
+    #   so the high watermarks need to be persisted.
+    high_watermarks = _get_high_watermarks_from_spec()
+    cursor = con.cursor()
+    cursor.execute("create table high_watermarks(key text, value text);")
+    for k, v in high_watermarks.items():
+        cursor.execute("insert into high_watermarks (key, value) values (?, ?);", (k, v))
+    cursor.close()
+
+
 def _read_tcestats_csv():
     # the master csv is barebone, and meant to be used internally for converting to sqlite db
     csv_path = f"{DATA_BASE_DIR}/{TCESTATS_FILENAME}"
@@ -151,6 +183,8 @@ def _export_tcestats_as_db():
         cursor = con.cursor()
         cursor.execute(sql_index)
         cursor.close()
+
+        _save_high_watermarks_to_db(con)
 
         con.commit()
     finally:

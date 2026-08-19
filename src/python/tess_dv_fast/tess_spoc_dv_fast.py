@@ -8,7 +8,9 @@ https://archive.stsci.edu/hlsp/tess-spoc
 
 # Volume note:
 # for sectors 36-77, there is ~250K TCEs, the db is ~9Mb, while the csv is ~6Mb
+from __future__ import annotations
 
+from functools import cache
 import re
 import sqlite3
 from typing import Callable, Optional, Union
@@ -23,9 +25,12 @@ from .tess_spoc_dv_fast_spec import (
 )
 
 
+def _db_uri():
+    return f"file:{DATA_BASE_DIR}/{TCESTATS_DBNAME}?mode=ro"  # read-only
+
+
 def _query_tcestats_from_db(sql: str, **kwargs) -> pd.DataFrame:
-    db_uri = f"file:{DATA_BASE_DIR}/{TCESTATS_DBNAME}?mode=ro"  # read-only
-    with sqlite3.connect(db_uri, uri=True) as con:
+    with sqlite3.connect(_db_uri(), uri=True) as con:
         df = pd.read_sql(sql, con, **kwargs)
         # to avoid "PerformanceWarning: DataFrame is highly fragmented."
         # in subsequent codes such as _add_helpful_columns_to_tcestats()
@@ -208,3 +213,16 @@ def display_tce_infos(
             return display(HTML(html))
         elif return_as == "html":
             return html
+
+
+@cache
+def get_high_watermarks() -> dict[str, str]:
+    with sqlite3.connect(_db_uri(), uri=True) as con:
+        cursor = con.cursor()
+        res = cursor.execute("select key, value from high_watermarks")
+        high_watermarks_table = res.fetchall()
+        high_watermarks_dict = {}
+        for row in high_watermarks_table:
+            high_watermarks_dict[row[0]] = row[1]
+        cursor.close()
+    return high_watermarks_dict
