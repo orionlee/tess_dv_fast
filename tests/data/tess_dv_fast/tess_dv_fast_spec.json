@@ -1,0 +1,10 @@
+{
+    "sources_tcestats_single_sector": [
+        "https://archive.stsci.edu/missions/tess/catalogs/tce/tess2018206190142-s0001-s0001_dvr-tcestats.csv",
+        "https://archive.stsci.edu/missions/tess/catalogs/tce/tess2025206194924-s0095-s0095_dvr-tcestats.csv"
+    ],
+    "sources_tcestats_multi_sector": [
+        "https://archive.stsci.edu/missions/tess/catalogs/tce/tess2018206190142-s0001-s0009_dvr-tcestats.csv",
+        "https://archive.stsci.edu/missions/tess/catalogs/tce/tess2018206190142-s0001-s0096_dvr-tcestats.csv"
+    ]
+}

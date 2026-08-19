@@ -16,11 +16,9 @@ from .tess_dv_fast_spec import (
     DATA_BASE_DIR,
     TCESTATS_DBNAME,
     TCESTATS_FILENAME,
-    sources_dv_sh_multi_sector,
-    sources_dv_sh_single_sector,
-    sources_tcestats_multi_sector,
-    sources_tcestats_single_sector,
 )
+
+from . import tess_dv_fast_spec as spec
 
 
 def _filename(url):
@@ -191,15 +189,18 @@ def _append_to_tcestats_csv(filepath, sectors_val, dest):
     df.to_csv(dest, index=False, header=write_header, mode="a")
 
 
-def download_all_data(minimal_db=False):
+def download_all_data(minimal_db=False, extract_source_urls=True):
     """Download all relevant data locally."""
     from . import download_utils
 
-    # TODO: scrape the listing pages to get the list of URLs, instead of hardcoded lists above
+    # web-scrape the listing pages to get the list of URLs, save locally
+    if extract_source_urls:
+        spec.extract_and_save_source_urls_to_file()
+    # else for cases the urls have been extracted and saved in the local json config file
 
     # dv products download scripts (for urls to the products)
     # - they need to be first downloaded: as creating master csv below relies on the scripts
-    for url in sources_dv_sh_single_sector + sources_dv_sh_multi_sector:
+    for url in spec.sources_dv_sh_single_sector + spec.sources_dv_sh_multi_sector:
         filename = _filename(url)
         filepath, is_cache_used = download_utils.download_file(
             url,
@@ -215,7 +216,7 @@ def download_all_data(minimal_db=False):
     dest_csv_tmp = f"{DATA_BASE_DIR}/{TCESTATS_FILENAME}.tmp"
     dest_csv = f"{DATA_BASE_DIR}/{TCESTATS_FILENAME}"
     Path(dest_csv_tmp).unlink(missing_ok=True)
-    for url in sources_tcestats_single_sector + sources_tcestats_multi_sector:
+    for url in spec.sources_tcestats_single_sector + spec.sources_tcestats_multi_sector:
         filename = _filename(url)
 
         filepath, is_cache_used = download_utils.download_file(

@@ -16,25 +16,7 @@ def spec_for_test():
     tess_dv_fast_spec.DATA_BASE_DIR = str((Path(__file__).parent / "data" / "tess_dv_fast").resolve())
 
     # use a subset of the data, the csv/sh have been pre-downloaded and trimmed for the use  of unit tests
-    tess_dv_fast_spec.sources_tcestats_single_sector = [
-        "https://archive.stsci.edu/missions/tess/catalogs/tce/tess2018206190142-s0001-s0001_dvr-tcestats.csv",
-        "https://archive.stsci.edu/missions/tess/catalogs/tce/tess2025206194924-s0095-s0095_dvr-tcestats.csv",
-    ]
-
-    tess_dv_fast_spec.sources_dv_sh_single_sector = [
-        "https://archive.stsci.edu/missions/tess/download_scripts/sector/tesscurl_sector_1_dv.sh",
-        "https://archive.stsci.edu/missions/tess/download_scripts/sector/tesscurl_sector_95_dv.sh",
-    ]
-
-    tess_dv_fast_spec.sources_tcestats_multi_sector = [
-        "https://archive.stsci.edu/missions/tess/catalogs/tce/tess2018206190142-s0001-s0009_dvr-tcestats.csv",
-        "https://archive.stsci.edu/missions/tess/catalogs/tce/tess2018206190142-s0001-s0096_dvr-tcestats.csv",
-    ]
-
-    tess_dv_fast_spec.sources_dv_sh_multi_sector = [
-        "https://archive.stsci.edu/missions/tess/download_scripts/sector/tesscurl_multisector_s0001-s0009_dv.sh",
-        "https://archive.stsci.edu/missions/tess/download_scripts/sector/tesscurl_multisector_s0001-s0096_dv.sh",
-    ]
+    # the list of csv/sh are specified in test-specific tess_dv_fast_spec.json
 
     # force the modules to use the patched spec module
     reload(tess_dv_fast_build)
@@ -52,7 +34,9 @@ def spec_for_test():
 def _build_test_db(minimal_db):
     # we are not actually testing the download
     # the tests/data/tess_dv_fast has test-specific versions of the csv
-    tess_dv_fast_build.download_all_data()
+    tess_dv_fast_build.download_all_data(
+        extract_source_urls=False,  # do not extract all URLs from MAST webpage
+    )
     tess_dv_fast_build._export_tcestats_as_db(minimal_db=minimal_db)
 
 
