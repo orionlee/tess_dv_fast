@@ -1,3 +1,8 @@
+0.12.0
+=====================
+- Users can create the database with the latest available data on MAST.
+  The list of CSV / DV URLs to be downloaded are no longer hardcoded.
+
 0.11.0.post20260818
 =====================
 - data: include SPOC s105, TESS-SPOC s85
