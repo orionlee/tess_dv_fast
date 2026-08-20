@@ -29,9 +29,9 @@ const (
 var spoc_sortable_columns_idx = []int{0, 4, 5, 6, 7, 8, 9, 10, 11}
 
 // BEGIN read build commit SHA
-// - cannot use Go's built-in runtime/debug.ReadBuildInfo(), because
-//   in Google Cloud Run source deployment scenario, the binary is built
-//   outside of a git repository.
+//   - cannot use Go's built-in runtime/debug.ReadBuildInfo(), because
+//     in Google Cloud Run source deployment scenario, the binary is built
+//     outside of a git repository.
 var (
 	// Cached SHA
 	// This variable holds the string value after it is loaded.
@@ -73,7 +73,7 @@ func loadSHAFromFile() {
 
 // getBuildSHA provides the cached first line of the file.
 func getBuildSHA() string {
-	once.Do(loadSHAFromFile)  // do it once to load it into cache
+	once.Do(loadSHAFromFile) // do it once to load it into cache
 	return cachedSHA
 }
 
@@ -279,7 +279,7 @@ func handleTCES(w http.ResponseWriter, r *http.Request) {
         </script>
     </body>
 </html>`,
-		totalSpocTCEs + totalTessSpocTCEs,
+		totalSpocTCEs+totalTessSpocTCEs,
 		ticEscaped,
 		getStyleCSS(),
 		exoFOPBaseURL,
@@ -300,8 +300,7 @@ func handleTCES(w http.ResponseWriter, r *http.Request) {
 }
 
 func renderHome() string {
-	// TODO: add build commit SHA and links
-	spocWatermarks := spec.GetHighWatermarks()
+	spocWatermarks := query.GetHighWatermarks()
 
 	return fmt.Sprintf(`<!DOCTYPE html>
 <html>

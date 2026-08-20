@@ -3,10 +3,12 @@ package query
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"net/url"
 	"regexp"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/orionlee/tess_dv_fast/pkg/common"
 	"github.com/orionlee/tess_dv_fast/pkg/spec"
@@ -64,6 +66,25 @@ type TessSpocTCEDisplayInfo struct {
 	DVR        string
 	SectorSpan int
 }
+
+// Denote the high watermarks of a single product type (SPOC or TESS-SPOC)
+type productHighWatermarks struct {
+	SingleSector string `json:"single_sector"`
+	MultiSector  string `json:"multi_sector"`
+}
+
+// High watermarks info
+type HighWatermarks struct {
+	SpocSingleSector     string `json:"single_sector"`
+	SpocMultiSector      string `json:"multi_sector"`
+	TessSpocSingleSector string `json:"tess_spoc_single_sector"`
+	TessSpocMultiSector  string `json:"tess_spoc_multi_sector"`
+}
+
+var (
+	cachedHighWaterMarks = HighWatermarks{}
+	cacheOnce            sync.Once
+)
 
 // GetTCEInfosOfTIC retrieves TCE information for a given TIC ID
 func GetTCEInfosOfTIC(tic int64) ([]TCERecord, error) {
@@ -528,4 +549,75 @@ func RenderTessSpocTCETable(records []TCERecord) string {
 
 	html.WriteString(`</tbody></table>`)
 	return html.String()
+}
+
+func getProductHighWatermarks(dbPath string) (*productHighWatermarks, error) {
+	hw := &productHighWatermarks{} // the return result
+
+	// Use proper URI format for modernc.org/sqlite with encoded path
+	dsn := "file:" + url.QueryEscape(dbPath) + "?mode=ro"
+	db, err := sql.Open("sqlite", dsn)
+	if err != nil {
+		return nil, fmt.Errorf("failed to open database %s: %w", dbPath, err)
+	}
+	defer db.Close()
+
+	rows, err := db.Query("select key, value from high_watermarks")
+	if err != nil {
+		return nil, fmt.Errorf("failed to query database: %w", err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var key string
+		var value string
+		if err := rows.Scan(
+			&key,
+			&value,
+		); err != nil {
+			return nil, fmt.Errorf("failed to scan row: %w", err)
+		}
+		if key == "single_sector" {
+			hw.SingleSector = value
+		}
+		if key == "multi_sector" {
+			hw.MultiSector = value
+		}
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating rows: %w", err)
+	}
+
+	return hw, nil
+}
+
+// GetHighWatermarks(): return the high watermarks from DB
+func GetHighWatermarks() *HighWatermarks {
+	cacheOnce.Do(func() {
+		// load the value to cachedHighWaterMarks
+
+		// SPOC
+		dbPath := spec.DatabaseDir + "/" + spec.TCEStatsDBName
+		spocHw, err := getProductHighWatermarks(dbPath)
+		if err != nil {
+			log.Printf("Get High Watermarks query failed %v", err)
+			return
+		}
+		cachedHighWaterMarks.SpocSingleSector = spocHw.SingleSector
+		cachedHighWaterMarks.SpocMultiSector = spocHw.MultiSector
+
+		// TESS-SPOC
+		dbPath2 := spec.DatabaseDir + "/" + spec.TessSpocDBName
+		tessSpocHw, err2 := getProductHighWatermarks(dbPath2)
+		if err2 != nil {
+			log.Printf("Get High Watermarks query failed %v", err2)
+			return
+		}
+		cachedHighWaterMarks.TessSpocSingleSector = tessSpocHw.SingleSector
+		cachedHighWaterMarks.TessSpocMultiSector = tessSpocHw.MultiSector
+
+	})
+
+	return &cachedHighWaterMarks
 }
