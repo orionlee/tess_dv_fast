@@ -404,7 +404,7 @@ addHideShowForTessSpocDupRows();
             <a href="/tces">New Search</a>
         </footer>
 
-        <script src="https://cdn.jsdelivr.net/gh/javve/list.js@2.3.1/dist/list.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/gh/sqlpage/list.js@2.3.7/dist/list.js"></script>
         <script>
 			// Init in-table sort/filter with list.js for SPOC results (if exists)
             if (document.querySelector('#result table#table_spoc')) {{

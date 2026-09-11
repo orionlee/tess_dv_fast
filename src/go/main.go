@@ -243,7 +243,7 @@ func handleTCES(w http.ResponseWriter, r *http.Request) {
             <a href="/tces">New Search</a>
         </footer>
 
-        <script src="https://cdn.jsdelivr.net/gh/javve/list.js@2.3.1/dist/list.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/gh/sqlpage/list.js@2.3.7/dist/list.js"></script>
         <script>
             // Hide/show TESS-SPOC duplicates of SPOC results
             function addHideShowForTessSpocDupRows() {
