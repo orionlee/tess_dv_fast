@@ -1,7 +1,10 @@
+0.12.2
+=====================
+- TESS-SPOC: fixed the bug of hardcoded source list.
+
 0.12.1
 =====================
 - webapp in-table search: support decimal values ("." is now supported)
-
 
 0.12.0
 =====================
